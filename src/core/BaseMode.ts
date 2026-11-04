@@ -82,3 +82,4 @@ export abstract class BaseMode {
 
   public cleanupAnimation(): void {}
 }
+

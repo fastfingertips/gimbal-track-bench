@@ -20,8 +20,12 @@ export class UIManager {
   public currentSpeed: number = 1.0;
   public currentModeId: string = '';
   public isMenuVisible: boolean = true;
+  private isDropdownOpen: boolean = false;
 
-  private modeBar: HTMLElement | null;
+  private modeMenuWrapper: HTMLElement | null;
+  private modeDropdownBtn: HTMLElement | null;
+  private triggerActiveName: HTMLElement | null;
+  private modeDropdownList: HTMLElement | null;
   private activeModeTitle: HTMLElement | null;
   private guiContainer: HTMLElement | null;
   private toggleMenuBtn: HTMLElement | null;
@@ -37,7 +41,10 @@ export class UIManager {
     this.onModeChange = options.onModeChange;
     this.globalConfig = options.globalConfig;
 
-    this.modeBar = document.getElementById('modeBar');
+    this.modeMenuWrapper = document.getElementById('modeMenuWrapper');
+    this.modeDropdownBtn = document.getElementById('modeDropdownBtn');
+    this.triggerActiveName = document.getElementById('triggerActiveName');
+    this.modeDropdownList = document.getElementById('modeDropdownList');
     this.activeModeTitle = document.getElementById('activeModeTitle');
     this.guiContainer = document.getElementById('gui-container');
     this.toggleMenuBtn = document.getElementById('toggleMenuBtn');
@@ -170,68 +177,70 @@ export class UIManager {
     }
   }
 
+  /**
+   * Render Top-Left Soft Dropdown list of modes
+   */
   public populateModeList(modes: Array<{ id: string; name: string; description: string }>, selectedId: string): void {
     this.currentModeId = selectedId;
-    if (!this.modeBar) return;
+    if (!this.modeDropdownList) return;
 
-    this.modeBar.innerHTML = '';
+    this.modeDropdownList.innerHTML = '';
     modes.forEach((mode) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `mode-pill ${mode.id === selectedId ? 'active' : ''}`;
-      btn.textContent = mode.name.split('(')[0].trim();
-      btn.title = mode.description;
+      const itemBtn = document.createElement('button');
+      itemBtn.type = 'button';
+      itemBtn.className = `mode-item-btn ${mode.id === selectedId ? 'active' : ''}`;
+      itemBtn.setAttribute('data-id', mode.id);
 
-      btn.addEventListener('click', () => {
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = mode.name.split('(')[0].trim();
+
+      const dot = document.createElement('span');
+      dot.className = 'mode-item-dot';
+
+      itemBtn.appendChild(nameSpan);
+      itemBtn.appendChild(dot);
+
+      itemBtn.addEventListener('click', () => {
         if (this.currentModeId !== mode.id) {
           this.currentModeId = mode.id;
-          this.updateActivePill(mode.id);
+          this.closeDropdown();
           if (this.onModeChange) {
             this.onModeChange(mode.id);
           }
+        } else {
+          this.closeDropdown();
         }
       });
 
-      this.modeBar.appendChild(btn);
+      this.modeDropdownList.appendChild(itemBtn);
     });
 
     const activeObj = modes.find((m) => m.id === selectedId);
-    if (activeObj && this.activeModeTitle) {
-      this.activeModeTitle.textContent = activeObj.name;
+    if (activeObj) {
+      this.updateActiveLabels(activeObj.name);
     }
   }
 
-  public updateActivePill(modeId: string): void {
-    if (!this.modeBar) return;
-    const buttons = this.modeBar.querySelectorAll<HTMLButtonElement>('.mode-pill');
-    buttons.forEach((btn) => {
-      btn.classList.toggle('active', btn.textContent === this.getModeShortName(modeId));
-    });
-  }
+  private updateActiveLabels(name: string): void {
+    const cleanName = name.split('(')[0].trim();
+    if (this.triggerActiveName) {
+      this.triggerActiveName.textContent = cleanName;
+    }
+    if (this.activeModeTitle) {
+      this.activeModeTitle.textContent = cleanName;
+    }
 
-  private getModeShortName(modeId: string): string {
-    const map: Record<string, string> = {
-      'linear-occlusion': 'Linear Occlusion',
-      'distractor-swapping': 'Crossing Paths',
-      'depth-zoom': 'Depth & Auto-Zoom',
-      'circular-tracking': 'Circular Orbit',
-      'step-jump': 'Step Response & Saccade Jump',
-    };
-    return map[modeId] || modeId;
+    if (this.modeDropdownList) {
+      const items = this.modeDropdownList.querySelectorAll<HTMLButtonElement>('.mode-item-btn');
+      items.forEach((btn) => {
+        const isMatch = btn.textContent?.includes(cleanName) ?? false;
+        btn.classList.toggle('active', isMatch);
+      });
+    }
   }
 
   public renderModeControls(modeInstance: BaseMode): void {
-    if (this.activeModeTitle) {
-      this.activeModeTitle.textContent = modeInstance.name;
-    }
-
-    if (this.modeBar) {
-      const buttons = this.modeBar.querySelectorAll<HTMLButtonElement>('.mode-pill');
-      buttons.forEach((btn) => {
-        const isThis = modeInstance.name.startsWith(btn.textContent || '');
-        btn.classList.toggle('active', isThis);
-      });
-    }
+    this.updateActiveLabels(modeInstance.name);
 
     if (this.modeFolder) {
       this.modeFolder.dispose();
@@ -283,6 +292,26 @@ export class UIManager {
     });
   }
 
+  public toggleDropdown(): void {
+    this.isDropdownOpen = !this.isDropdownOpen;
+    if (this.modeDropdownList && this.modeMenuWrapper) {
+      if (this.isDropdownOpen) {
+        this.modeDropdownList.classList.remove('hidden');
+        this.modeMenuWrapper.classList.add('open');
+      } else {
+        this.closeDropdown();
+      }
+    }
+  }
+
+  public closeDropdown(): void {
+    this.isDropdownOpen = false;
+    if (this.modeDropdownList && this.modeMenuWrapper) {
+      this.modeDropdownList.classList.add('hidden');
+      this.modeMenuWrapper.classList.remove('open');
+    }
+  }
+
   public toggleMenuVisibility(): void {
     this.isMenuVisible = !this.isMenuVisible;
 
@@ -314,6 +343,22 @@ export class UIManager {
   }
 
   private bindEvents(): void {
+    // Mode dropdown toggle button
+    if (this.modeDropdownBtn) {
+      this.modeDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleDropdown();
+      });
+    }
+
+    // Close dropdown on outside click
+    window.addEventListener('click', (e) => {
+      if (this.isDropdownOpen && !this.modeMenuWrapper?.contains(e.target as Node)) {
+        this.closeDropdown();
+      }
+    });
+
+    // Right menu toggle button
     if (this.toggleMenuBtn) {
       this.toggleMenuBtn.classList.add('active');
       this.toggleMenuBtn.addEventListener('click', (e) => {
@@ -330,6 +375,9 @@ export class UIManager {
       if (e.code === 'Space') {
         e.preventDefault();
         this.togglePlayPause();
+      }
+      if (e.key === 'Escape' && this.isDropdownOpen) {
+        this.closeDropdown();
       }
     });
 

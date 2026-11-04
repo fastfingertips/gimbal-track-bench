@@ -10,19 +10,30 @@
     <!-- Full-screen canvas container for PTZ / Gimbal camera tracking -->
     <main id="canvas-container" class="canvas-container"></main>
 
-    <!-- Top-Left: Mode Switcher Pills (VS Code Matte Style) -->
-    <nav id="modeBar" class="mode-bar" aria-label="Tracking Test Modes"></nav>
+    <!-- Top-Left: Modern Soft Dropdown / Menu for Test Modes -->
+    <div id="modeMenuWrapper" class="mode-menu-wrapper">
+      <button id="modeDropdownBtn" class="mode-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+        <span class="trigger-label">Mode</span>
+        <span id="triggerActiveName" class="trigger-active-name">Linear Occlusion</span>
+        <svg class="chevron-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
 
-    <!-- Top-Center: Current Active Mode Name Badge -->
+      <!-- Soft Floating Modes List -->
+      <div id="modeDropdownList" class="mode-dropdown-list hidden" role="menu"></div>
+    </div>
+
+    <!-- Top-Center: Minimal Clean Text with Sleek Underline Indicator -->
     <div class="active-mode-display">
-      <span class="active-mode-indicator"></span>
       <span id="activeModeTitle" class="active-mode-title">Linear Occlusion</span>
+      <div class="active-mode-line"></div>
     </div>
 
     <!-- Top-Right: Isolated GUI Wrapper for Parameter Controls -->
     <div id="gui-container" class="gui-wrapper"></div>
 
-    <!-- Top-Right: Floating Borderless Menu Toggle Icon Button -->
+    <!-- Top-Right: 100% Frameless & Non-Boxy Floating Toggle Icon Button -->
     <button
       id="toggleMenuBtn"
       class="icon-btn menu-toggle-btn active"
@@ -30,7 +41,7 @@
       title="Toggle Controls Panel (Hotkey: H)"
       aria-label="Toggle Controls Panel"
     >
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"></circle>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
       </svg>

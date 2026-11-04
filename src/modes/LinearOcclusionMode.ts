@@ -246,3 +246,4 @@ export class LinearOcclusionMode extends BaseMode {
     }
   }
 }
+

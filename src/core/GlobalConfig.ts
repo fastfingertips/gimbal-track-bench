@@ -142,3 +142,4 @@ export class GlobalConfig {
     gridLayer.batchDraw();
   }
 }
+

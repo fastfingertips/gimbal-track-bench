@@ -79,3 +79,4 @@ export class CanvasManager {
     this.layers.forEach((layer) => layer.batchDraw());
   }
 }
+

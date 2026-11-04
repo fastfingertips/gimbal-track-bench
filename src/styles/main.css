@@ -13,7 +13,6 @@
   --border-subtle: #3e3e42;       /* Subtle dark border */
   --text-main: #cccccc;           /* VS Code Main Text */
   --text-muted: #858585;          /* VS Code Muted Text */
-  --target-accent: #007acc;       /* Default sleek tracking target */
 }
 
 * {
@@ -51,53 +50,131 @@ body {
 }
 
 /* ========================================================
-   1. TOP-LEFT: MODES SWITCHER BAR (VS Code Tab/Pill Style)
+   1. TOP-LEFT: MODERN SOFT DROPDOWN MENU FOR MODES
    ======================================================== */
-.mode-bar {
+.mode-menu-wrapper {
   position: fixed;
   top: 16px;
   left: 18px;
   z-index: 50;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(37, 37, 38, 0.75);
-  backdrop-filter: blur(10px);
-  padding: 3px 4px;
-  border-radius: 6px;
+  flex-direction: column;
+}
+
+.mode-dropdown-trigger {
+  appearance: none;
+  background: rgba(37, 37, 38, 0.85);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--text-main);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
-.mode-pill {
+.mode-dropdown-trigger:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--vscode-blue);
+  color: #ffffff;
+}
+
+.trigger-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.trigger-active-name {
+  font-weight: 600;
+  color: var(--vscode-blue-hover);
+}
+
+.chevron-icon {
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.mode-menu-wrapper.open .chevron-icon {
+  transform: rotate(180deg);
+}
+
+/* Soft Floating Modes List */
+.mode-dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 230px;
+  background: rgba(30, 30, 32, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.mode-dropdown-list.hidden {
+  display: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+}
+
+.mode-item-btn {
   appearance: none;
-  border: none;
   background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 10px;
+  text-align: left;
   color: var(--text-muted);
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 4px;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.15s ease;
 }
 
-.mode-pill:hover {
-  background: var(--bg-tertiary);
+.mode-item-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
 }
 
-.mode-pill.active {
-  background: var(--vscode-blue);
-  color: #ffffff;
+.mode-item-btn.active {
+  background: var(--vscode-blue-muted);
+  color: var(--vscode-blue-hover);
   font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mode-item-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vscode-blue);
+  opacity: 0;
+}
+
+.mode-item-btn.active .mode-item-dot {
+  opacity: 1;
 }
 
 /* ========================================================
-   2. TOP-CENTER: ACTIVE MODE NAME DISPLAY
+   2. TOP-CENTER: MINIMAL TEXT WITH SLEEK UNDERLINE
    ======================================================== */
 .active-mode-display {
   position: fixed;
@@ -106,63 +183,61 @@ body {
   transform: translateX(-50%);
   z-index: 40;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  background: rgba(30, 30, 30, 0.6);
-  backdrop-filter: blur(8px);
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-}
-
-.active-mode-indicator {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--vscode-blue);
-  box-shadow: 0 0 8px var(--vscode-blue);
 }
 
 .active-mode-title {
   font-family: var(--font-code);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.3px;
-  color: var(--text-main);
+  letter-spacing: 0.6px;
+  color: #dfdfdf;
   text-transform: uppercase;
 }
 
+/* Sleek subtle line under title */
+.active-mode-line {
+  margin-top: 5px;
+  width: 38px;
+  height: 2px;
+  background-color: var(--vscode-blue);
+  border-radius: 2px;
+  opacity: 0.85;
+}
+
 /* ========================================================
-   3. TOP-RIGHT: BORDERLESS ICON BUTTON & CONTROLS PANEL
+   3. TOP-RIGHT: 100% FRAMELESS TOGGLE ICON (NO BOX / NO BORDER)
    ======================================================== */
 .menu-toggle-btn {
   position: fixed;
   top: 16px;
   right: 18px;
-  width: 34px;
-  height: 34px;
-  border-radius: 4px;
-  background: transparent !important;   /* No boxy background */
-  border: none !important;              /* Completely borderless */
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+  background: transparent !important;
+  border: none !important;
   outline: none !important;
-  box-shadow: none !important;          /* No shadow frame */
+  box-shadow: none !important;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  opacity: 0.7;
-  transition: all 0.2s ease-in-out;
+  opacity: 0.65;
+  border-radius: 50% !important; /* Circular if any boundary, absolutely no square box */
+  transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .menu-toggle-btn:hover {
   opacity: 1;
   color: var(--vscode-blue-hover);
-  background: rgba(255, 255, 255, 0.06) !important;
-  transform: scale(1.08);
+  background: transparent !important; /* Zero background box on hover */
+  transform: scale(1.15) rotate(15deg); /* Subtle playful gear spin instead of ugly square box */
 }
 
 .menu-toggle-btn.active {
@@ -172,7 +247,7 @@ body {
 
 .gui-wrapper {
   position: fixed;
-  top: 56px;
+  top: 54px;
   right: 18px;
   width: 320px;
   z-index: 9999;
@@ -197,7 +272,7 @@ body {
   letter-spacing: 0.2px !important;
 }
 
-/* Tweakpane folder titles, labels, inputs */
+/* Tweakpane typography overrides */
 .tp-fldv_t {
   font-family: var(--font-ui) !important;
   font-size: 11px !important;
