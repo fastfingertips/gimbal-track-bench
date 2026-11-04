@@ -35,6 +35,7 @@ class App {
       },
       onModeChange: (modeId: string) => {
         this.modeRegistry.switchMode(modeId);
+        this.updateUrlForMode(modeId);
       },
     });
 
@@ -49,9 +50,49 @@ class App {
     this.modeRegistry.register(new CustomPathMode());
 
     const allModes = this.modeRegistry.getAllModes();
-    const initialModeId = allModes[0].id;
+    const urlModeId = this.getModeFromUrl(allModes);
+    const initialModeId = urlModeId || allModes[0].id;
+
     this.uiManager.populateModeList(allModes, initialModeId);
     this.modeRegistry.switchMode(initialModeId);
+    this.updateUrlForMode(initialModeId, true);
+
+    // Listen for browser navigation (Back / Forward buttons)
+    window.addEventListener('popstate', () => {
+      const targetModeId = this.getModeFromUrl(allModes);
+      if (targetModeId && targetModeId !== this.modeRegistry.getActiveMode()?.id) {
+        this.modeRegistry.switchMode(targetModeId);
+      }
+    });
+  }
+
+  private getModeFromUrl(allModes: Array<{ id: string }>): string | null {
+    // Check search params ?mode=...
+    const params = new URLSearchParams(window.location.search);
+    const searchMode = params.get('mode');
+    if (searchMode && allModes.some((m) => m.id === searchMode)) {
+      return searchMode;
+    }
+
+    // Check hash #... (e.g. #manual-control)
+    const hash = window.location.hash.replace(/^#/, '');
+    if (hash && allModes.some((m) => m.id === hash)) {
+      return hash;
+    }
+
+    return null;
+  }
+
+  private updateUrlForMode(modeId: string, replace: boolean = false): void {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('mode') === modeId) return;
+
+    url.searchParams.set('mode', modeId);
+    if (replace) {
+      window.history.replaceState({ mode: modeId }, '', url.toString());
+    } else {
+      window.history.pushState({ mode: modeId }, '', url.toString());
+    }
   }
 }
 

@@ -877,3 +877,4 @@ export class CustomPathMode extends BaseMode {
     this.clearTrail();
   }
 }
+

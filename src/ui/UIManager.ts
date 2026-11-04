@@ -213,6 +213,7 @@ export class UIManager {
     window.addEventListener('mousemove', (e: MouseEvent) => {
       if (
         this.isUserIdle ||
+        this.currentModeId === 'manual-control' ||
         (this.canvasInspector && !this.canvasInspector.classList.contains('hidden')) ||
         this.isDropdownOpen
       ) {
@@ -438,7 +439,7 @@ export class UIManager {
     if (this.modeDropdownList) {
       const items = this.modeDropdownList.querySelectorAll<HTMLButtonElement>('.mode-item-btn');
       items.forEach((btn) => {
-        const isMatch = btn.textContent?.includes(cleanName) ?? false;
+        const isMatch = btn.getAttribute('data-id') === this.currentModeId || (btn.textContent?.includes(cleanName) ?? false);
         btn.classList.toggle('active', isMatch);
       });
     }

@@ -75,11 +75,30 @@ body.user-idle .cursor-tooltip {
 }
 
 /* ========================================================
-   MANUAL CONTROL MODE: IMMERSIVE CURSOR HIDING
+   MANUAL CONTROL MODE: IMMERSIVE UI & CURSOR HIDING
+   - UI is hidden by default and only appears when clicked (paused)
+   - Cursor is hidden over canvas during active manual control
+   - Tooltip beside cursor is completely disabled in manual mode
    ======================================================== */
 body.manual-control-active:not(.is-paused) #canvas-container,
 body.manual-control-active:not(.is-paused) #canvas-container * {
   cursor: none !important;
+}
+
+body.manual-control-active:not(.is-paused) .mode-menu-wrapper,
+body.manual-control-active:not(.is-paused) .active-mode-display,
+body.manual-control-active:not(.is-paused) .gui-wrapper,
+body.manual-control-active:not(.is-paused) .menu-toggle-btn,
+body.manual-control-active:not(.is-paused) .ghost-github-badge {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body.manual-control-active .cursor-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* ========================================================
