@@ -2,27 +2,27 @@ import Konva from 'konva';
 
 /**
  * GlobalConfig holds cross-mode visual settings that PTZ camera testers frequently tune.
+ * Defaults are now tailored to a sleek, matte VS Code Dark+ style palette.
  */
 export class GlobalConfig {
   constructor(canvasManager) {
     this.canvasManager = canvasManager;
 
     this.settings = {
-      // Target appearance
-      targetColor: '#00ff66',
-      targetShape: 'circle', // 'circle' | 'square'
+      // Target appearance (Default to stylish Cyan/VS Code tracking blue)
+      targetColor: '#007acc',
       targetGlow: true,
-      glowBlur: 16,
+      glowBlur: 14,
 
-      // Obstacle appearance
-      obstacleColor: '#000000',
+      // Obstacle appearance (Pure matte dark block)
+      obstacleColor: '#141414',
       obstacleOpacity: 1.0,
 
-      // Background appearance
-      backgroundColor: '#121212',
+      // Background appearance (VS Code editor gray #1e1e1e)
+      backgroundColor: '#1e1e1e',
       showGrid: true,
       gridSpacing: 60,
-      gridColor: '#1e1e24',
+      gridColor: '#2b2b2e',
 
       // Camera assistance
       crosshair: false,
@@ -58,15 +58,12 @@ export class GlobalConfig {
   }
 
   applyBackgroundAndGrid() {
-    // 1. Update background color
     const container = document.getElementById('canvas-container');
     if (container) {
       container.style.backgroundColor = this.settings.backgroundColor;
     }
 
-    // 2. Update background grid layer (underneath everything)
     const gridLayer = this.canvasManager.getLayer('background-grid-layer');
-    // Ensure grid layer stays on bottom
     gridLayer.moveToBottom();
     gridLayer.destroyChildren();
 
@@ -74,7 +71,6 @@ export class GlobalConfig {
       const { width, height } = this.canvasManager.getDimensions();
       const spacing = this.settings.gridSpacing;
 
-      // Vertical grid lines
       for (let x = spacing; x < width; x += spacing) {
         gridLayer.add(
           new Konva.Line({
@@ -86,7 +82,6 @@ export class GlobalConfig {
         );
       }
 
-      // Horizontal grid lines
       for (let y = spacing; y < height; y += spacing) {
         gridLayer.add(
           new Konva.Line({
@@ -99,7 +94,6 @@ export class GlobalConfig {
       }
     }
 
-    // 3. Center crosshair for camera alignment calibration
     if (this.settings.crosshair) {
       const { width, height } = this.canvasManager.getDimensions();
       const cx = width / 2;
@@ -108,7 +102,7 @@ export class GlobalConfig {
       gridLayer.add(
         new Konva.Line({
           points: [cx - 30, cy, cx + 30, cy],
-          stroke: '#ff3366',
+          stroke: '#007acc',
           strokeWidth: 1.5,
           listening: false,
         })
@@ -116,7 +110,7 @@ export class GlobalConfig {
       gridLayer.add(
         new Konva.Line({
           points: [cx, cy - 30, cx, cy + 30],
-          stroke: '#ff3366',
+          stroke: '#007acc',
           strokeWidth: 1.5,
           listening: false,
         })
@@ -126,7 +120,7 @@ export class GlobalConfig {
           x: cx,
           y: cy,
           radius: 14,
-          stroke: '#ff3366',
+          stroke: '#007acc',
           strokeWidth: 1.2,
           listening: false,
         })

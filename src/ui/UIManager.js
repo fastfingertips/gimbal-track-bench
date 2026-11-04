@@ -184,14 +184,21 @@ export class UIManager {
 
   toggleMenuVisibility() {
     this.isMenuVisible = !this.isMenuVisible;
-    const el = this.pane.element;
-    if (el) {
+
+    // Tweakpane puts its root container element as this.pane.element
+    // We toggle the hidden attribute or direct display style
+    if (this.pane && this.pane.element) {
+      this.pane.hidden = !this.isMenuVisible;
+      this.pane.element.style.setProperty('display', this.isMenuVisible ? 'block' : 'none', 'important');
+    }
+
+    if (this.toggleMenuBtn) {
       if (this.isMenuVisible) {
-        el.classList.remove('tp-hidden');
-        if (this.toggleMenuBtn) this.toggleMenuBtn.classList.add('active');
+        this.toggleMenuBtn.classList.add('active');
+        this.toggleMenuBtn.setAttribute('title', 'Hide Controls Panel (Hotkey: H)');
       } else {
-        el.classList.add('tp-hidden');
-        if (this.toggleMenuBtn) this.toggleMenuBtn.classList.remove('active');
+        this.toggleMenuBtn.classList.remove('active');
+        this.toggleMenuBtn.setAttribute('title', 'Open Controls Panel (Hotkey: H)');
       }
     }
   }
@@ -286,7 +293,9 @@ export class UIManager {
     // Toggle menu with top-right gear icon button
     if (this.toggleMenuBtn) {
       this.toggleMenuBtn.classList.add('active');
-      this.toggleMenuBtn.addEventListener('click', () => {
+      this.toggleMenuBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         this.toggleMenuVisibility();
       });
     }

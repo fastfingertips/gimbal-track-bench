@@ -1,8 +1,15 @@
 :root {
-  --bg-primary: #121212;
-  --accent-color: #00ff66;
-  --text-main: #f4f4f6;
-  --text-muted: #8e8e93;
+  /* VS Code Dark+ / Modern Matte Theme Palette */
+  --bg-primary: #1e1e1e;          /* VS Code Editor BG */
+  --bg-secondary: #252526;        /* VS Code Sidebar BG */
+  --bg-tertiary: #2d2d30;         /* VS Code Activity Bar */
+  --vscode-blue: #007acc;         /* Signature VS Code Blue */
+  --vscode-blue-hover: #1f8ad2;   /* Hover Blue */
+  --vscode-blue-muted: rgba(0, 122, 204, 0.2);
+  --border-subtle: #3e3e42;       /* Subtle dark border */
+  --text-main: #cccccc;           /* VS Code Main Text */
+  --text-muted: #858585;          /* VS Code Muted Text */
+  --target-accent: #007acc;       /* Default sleek tracking target */
 }
 
 * {
@@ -16,7 +23,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-main);
   user-select: none;
@@ -34,86 +41,85 @@ body {
   z-index: 1;
 }
 
-/* Top-Right Toggle Icon Button */
+/* Top-Right Toggle Icon Button (Matte VS Code Style) */
 .menu-toggle-btn {
   position: fixed;
-  top: 18px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: rgba(22, 22, 26, 0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #a0a0aa;
+  top: 16px;
+  right: 18px;
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .menu-toggle-btn:hover {
-  background: rgba(32, 32, 38, 0.95);
-  color: var(--accent-color);
-  border-color: rgba(0, 255, 102, 0.4);
-  transform: scale(1.06);
+  background: var(--bg-tertiary);
+  color: var(--vscode-blue-hover);
+  border-color: var(--vscode-blue);
+  transform: translateY(-1px);
 }
 
 .menu-toggle-btn.active {
-  background: rgba(0, 255, 102, 0.15);
-  color: var(--accent-color);
-  border-color: var(--accent-color);
+  background: var(--vscode-blue-muted);
+  color: var(--vscode-blue-hover);
+  border-color: var(--vscode-blue);
 }
 
 /* Bottom-Right Minimal Ghost GitHub Badge (Fades in on hover) */
 .ghost-github-badge {
   position: fixed;
   bottom: 16px;
-  right: 20px;
+  right: 18px;
   z-index: 50;
   display: inline-flex;
   align-items: center;
   gap: 0px;
-  background: rgba(22, 22, 26, 0.4);
-  backdrop-filter: blur(8px);
-  color: #71717a;
+  background: rgba(30, 30, 30, 0.4);
+  backdrop-filter: blur(6px);
+  color: var(--text-muted);
   opacity: 0.35;
   padding: 8px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
   text-decoration: none;
   overflow: hidden;
   max-width: 36px;
   height: 36px;
   white-space: nowrap;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ghost-github-badge .github-icon {
   flex-shrink: 0;
-  transition: color 0.25s ease;
+  transition: color 0.2s ease;
 }
 
 .ghost-github-badge .repo-text {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: Consolas, "Courier New", monospace;
   font-size: 0.78rem;
   opacity: 0;
   margin-left: 8px;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
 }
 
 /* Hover expansion */
 .ghost-github-badge:hover {
   opacity: 1;
   max-width: 250px;
-  padding: 8px 14px 8px 10px;
-  background: rgba(26, 26, 32, 0.9);
-  color: var(--accent-color);
-  border-color: rgba(0, 255, 102, 0.35);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  padding: 8px 12px 8px 10px;
+  background: var(--bg-secondary);
+  color: var(--vscode-blue-hover);
+  border-color: var(--vscode-blue);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
   transform: translateY(-2px);
 }
 
@@ -121,43 +127,38 @@ body {
   opacity: 1;
 }
 
-/* Tweakpane Floating GUI Customizations */
+/* Tweakpane Floating GUI Customizations - VS Code Matte Palette */
 .tp-dfwv {
   position: fixed !important;
-  top: 68px !important; /* Positioned right below the icon button */
-  right: 20px !important;
+  top: 62px !important;
+  right: 18px !important;
   width: 320px !important;
   z-index: 9999 !important;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65) !important;
-  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 6px !important;
   overflow: hidden !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(14px) !important;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  border: 1px solid var(--border-subtle) !important;
 }
 
-.tp-dfwv.tp-hidden {
-  display: none !important;
-}
-
+/* Tweakpane CSS Variable Overrides to match Matte VS Code style */
 :root {
-  --tp-base-background-color: hsla(0, 0%, 10%, 0.92);
-  --tp-base-shadow-color: rgba(0, 0, 0, 0.4);
-  --tp-button-background-color: hsla(0, 0%, 20%, 1);
-  --tp-button-background-color-active: hsla(0, 0%, 28%, 1);
-  --tp-button-background-color-focus: hsla(0, 0%, 24%, 1);
-  --tp-button-background-color-hover: hsla(0, 0%, 24%, 1);
-  --tp-button-foreground-color: #f4f4f6;
-  --tp-container-background-color: hsla(0, 0%, 0%, 0.35);
-  --tp-container-background-color-active: hsla(0, 0%, 0%, 0.6);
-  --tp-container-background-color-focus: hsla(0, 0%, 0%, 0.5);
-  --tp-container-background-color-hover: hsla(0, 0%, 0%, 0.4);
-  --tp-container-foreground-color: #f4f4f6;
-  --tp-groove-foreground-color: hsla(0, 0%, 0%, 0.4);
-  --tp-input-background-color: hsla(0, 0%, 15%, 1);
-  --tp-input-background-color-active: hsla(0, 0%, 22%, 1);
-  --tp-input-background-color-focus: hsla(0, 0%, 20%, 1);
-  --tp-input-background-color-hover: hsla(0, 0%, 18%, 1);
-  --tp-input-foreground-color: #f4f4f6;
-  --tp-label-foreground-color: #a0a0a5;
+  --tp-base-background-color: #252526;
+  --tp-base-shadow-color: rgba(0, 0, 0, 0.3);
+  --tp-button-background-color: #333333;
+  --tp-button-background-color-active: #007acc;
+  --tp-button-background-color-focus: #3e3e42;
+  --tp-button-background-color-hover: #3c3c3c;
+  --tp-button-foreground-color: #ffffff;
+  --tp-container-background-color: #1e1e1e;
+  --tp-container-background-color-active: #1e1e1e;
+  --tp-container-background-color-focus: #1e1e1e;
+  --tp-container-background-color-hover: #1e1e1e;
+  --tp-container-foreground-color: #cccccc;
+  --tp-groove-foreground-color: #3e3e42;
+  --tp-input-background-color: #3c3c3c;
+  --tp-input-background-color-active: #007acc;
+  --tp-input-background-color-focus: #007acc;
+  --tp-input-background-color-hover: #464646;
+  --tp-input-foreground-color: #ffffff;
+  --tp-label-foreground-color: #969696;
 }
