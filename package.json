@@ -1,7 +1,7 @@
 {
   "name": "gimbal-track-bench",
   "version": "0.1.0",
-  "description": "High-performance visual benchmark suite for evaluating PTZ and gimbal camera tracking algorithms.",
+  "description": "Benchmark suite for evaluating PTZ and gimbal camera tracking algorithms.",
   "license": "MIT",
   "private": true,
   "type": "module",
