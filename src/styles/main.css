@@ -1,14 +1,8 @@
 :root {
   --bg-primary: #121212;
-  --bg-panel: #18181a;
-  --panel-border: #28282e;
+  --accent-color: #00ff66;
   --text-main: #f4f4f6;
   --text-muted: #8e8e93;
-  --accent-color: #00ff66;
-  --accent-hover: #00dd55;
-  --btn-bg: #222226;
-  --btn-hover: #2c2c32;
-  --input-bg: #222226;
 }
 
 * {
@@ -19,8 +13,8 @@
 
 html,
 body {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-primary);
@@ -28,39 +22,44 @@ body {
   user-select: none;
 }
 
-.control-panel {
-  position: fixed;
+/* Fullscreen Canvas */
+.canvas-container {
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  min-height: 100px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--panel-border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0.75rem 2rem;
-  z-index: 100;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  gap: 0.6rem;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-primary);
+  overflow: hidden;
+  z-index: 1;
 }
 
-.panel-row-top {
+/* Minimal HUD badge on top-left */
+.hud-overlay {
+  position: fixed;
+  top: 18px;
+  left: 20px;
+  z-index: 10;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(18, 18, 18, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 8px;
 }
 
 .status-indicator {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background-color: var(--accent-color);
   box-shadow: 0 0 10px var(--accent-color);
@@ -78,190 +77,53 @@ body {
   }
 }
 
-.brand h1 {
-  font-size: 1.05rem;
+.hud-title {
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: var(--text-main);
 }
 
-.mode-description {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 50vw;
-}
-
-.controls-group {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-}
-
-.divider {
-  width: 1px;
-  height: 32px;
-  background-color: var(--panel-border);
-}
-
-.control-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 150px;
-}
-
-.control-item-checkbox {
-  min-width: auto;
-  justify-content: center;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-.checkbox-label input[type="checkbox"] {
-  accent-color: var(--accent-color);
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.control-item label {
+.hud-sub {
   font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.mode-select-box {
-  min-width: 200px;
-}
-
-.custom-select {
-  background: var(--input-bg);
-  color: var(--text-main);
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-}
-
-.custom-select:hover,
-.custom-select:focus {
-  border-color: var(--accent-color);
-}
-
-.badge {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.72rem;
   color: var(--accent-color);
-  background-color: rgba(0, 255, 102, 0.1);
-  padding: 1px 6px;
-  border-radius: 4px;
+  font-weight: 500;
 }
 
-input[type="range"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  height: 5px;
-  background: #333338;
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-  transition: background 0.2s ease;
+/* Tweakpane Floating GUI Customizations */
+.tp-dfwv {
+  position: fixed !important;
+  top: 18px !important;
+  right: 20px !important;
+  width: 310px !important;
+  z-index: 9999 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px) !important;
 }
 
-input[type="range"]:hover {
-  background: #44444c;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: var(--accent-color);
-  cursor: pointer;
-  box-shadow: 0 0 6px var(--accent-color);
-  transition: transform 0.15s ease;
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
-  border: none;
-  border-radius: 50%;
-  background: var(--accent-color);
-  cursor: pointer;
-  box-shadow: 0 0 6px var(--accent-color);
-  transition: transform 0.15s ease;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1.25rem;
-  border-radius: 6px;
-  border: 1px solid var(--panel-border);
-  background: var(--btn-bg);
-  color: var(--text-main);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn:hover {
-  background: var(--btn-hover);
-  border-color: #4a4a52;
-}
-
-.btn:active {
-  transform: scale(0.98);
-}
-
-.btn-primary {
-  border-color: rgba(0, 255, 102, 0.35);
-}
-
-.btn-primary:hover {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
-}
-
-.canvas-container {
-  position: absolute;
-  top: 100px;
-  left: 0;
-  width: 100vw;
-  height: calc(100vh - 100px);
-  background-color: var(--bg-primary);
-  overflow: hidden;
+/* Custom dark neon accents inside Tweakpane */
+:root {
+  --tp-base-background-color: hsla(0, 0%, 10%, 0.92);
+  --tp-base-shadow-color: rgba(0, 0, 0, 0.4);
+  --tp-button-background-color: hsla(0, 0%, 20%, 1);
+  --tp-button-background-color-active: hsla(0, 0%, 28%, 1);
+  --tp-button-background-color-focus: hsla(0, 0%, 24%, 1);
+  --tp-button-background-color-hover: hsla(0, 0%, 24%, 1);
+  --tp-button-foreground-color: #f4f4f6;
+  --tp-container-background-color: hsla(0, 0%, 0%, 0.35);
+  --tp-container-background-color-active: hsla(0, 0%, 0%, 0.6);
+  --tp-container-background-color-focus: hsla(0, 0%, 0%, 0.5);
+  --tp-container-background-color-hover: hsla(0, 0%, 0%, 0.4);
+  --tp-container-foreground-color: #f4f4f6;
+  --tp-groove-foreground-color: hsla(0, 0%, 0%, 0.4);
+  --tp-input-background-color: hsla(0, 0%, 15%, 1);
+  --tp-input-background-color-active: hsla(0, 0%, 22%, 1);
+  --tp-input-background-color-focus: hsla(0, 0%, 20%, 1);
+  --tp-input-background-color-hover: hsla(0, 0%, 18%, 1);
+  --tp-input-foreground-color: #f4f4f6;
+  --tp-label-foreground-color: #a0a0a5;
 }

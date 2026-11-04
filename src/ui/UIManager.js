@@ -1,6 +1,12 @@
+import { Pane } from 'tweakpane';
+
 /**
- * UIManager binds global header controls (Play/Pause, Speed, Mode Selector)
- * and dynamically populates mode-specific parameters.
+ * UIManager handles the floating Tweakpane panel in the top-right corner.
+ * Features:
+ * - Collapsible & movable floating GUI
+ * - Global controls: Active Test Mode selector, Play/Pause, Speed scale, Visibility toggle
+ * - Dynamic mode parameter folders that update automatically on mode switch
+ * - 'H' hotkey to hide/show GUI for unhindered camera view
  */
 export class UIManager {
   constructor({ onPlayPauseToggle, onSpeedChange, onModeChange }) {
@@ -10,124 +16,156 @@ export class UIManager {
 
     this.isPaused = false;
     this.currentSpeed = 1.0;
+    this.currentModeId = '';
 
-    this.modeSelect = document.getElementById('modeSelect');
-    this.togglePlayBtn = document.getElementById('togglePlayBtn');
-    this.toggleIcon = document.getElementById('toggleIcon');
-    this.toggleText = document.getElementById('toggleText');
-    this.speedSlider = document.getElementById('speedSlider');
-    this.speedValue = document.getElementById('speedValue');
-    this.modeDescription = document.getElementById('modeDescription');
-    this.modeControlsContainer = document.getElementById('modeSpecificControls');
+    this.hudModeName = document.getElementById('hudModeName');
 
-    this.bindGlobalEvents();
-  }
-
-  populateModeList(modes, selectedId) {
-    this.modeSelect.innerHTML = '';
-    modes.forEach((mode) => {
-      const option = document.createElement('option');
-      option.value = mode.id;
-      option.textContent = mode.name;
-      if (mode.id === selectedId) {
-        option.selected = true;
-      }
-      this.modeSelect.appendChild(option);
+    // Initialize Tweakpane
+    this.pane = new Pane({
+      title: 'Tracking Controls',
+      expanded: true,
     });
+
+    this.modeFolder = null;
+    this.setupGlobalControls();
+    this.bindKeyboardShortcuts();
   }
 
-  bindGlobalEvents() {
-    this.togglePlayBtn.addEventListener('click', () => {
+  setupGlobalControls() {
+    // 1. Playback folder
+    const globalFolder = this.pane.addFolder({
+      title: 'Global Settings',
+      expanded: true,
+    });
+
+    // Speed Slider
+    globalFolder
+      .addBinding({ speed: this.currentSpeed }, 'speed', {
+        min: 0.2,
+        max: 4.0,
+        step: 0.1,
+        label: 'Speed',
+      })
+      .on('change', (ev) => {
+        this.currentSpeed = ev.value;
+        if (this.onSpeedChange) {
+          this.onSpeedChange(this.currentSpeed);
+        }
+      });
+
+    // Play / Pause Button
+    this.playPauseBtn = globalFolder.addButton({
+      title: '⏸ Pause',
+      label: 'Playback',
+    });
+
+    this.playPauseBtn.on('click', () => {
       this.isPaused = !this.isPaused;
-      this.updatePlayPauseUI();
+      this.playPauseBtn.title = this.isPaused ? '▶ Play' : '⏸ Pause';
       if (this.onPlayPauseToggle) {
         this.onPlayPauseToggle(this.isPaused);
       }
     });
 
-    this.speedSlider.addEventListener('input', (e) => {
-      this.currentSpeed = parseFloat(e.target.value);
-      this.speedValue.textContent = `${this.currentSpeed.toFixed(1)}x`;
-      if (this.onSpeedChange) {
-        this.onSpeedChange(this.currentSpeed);
-      }
-    });
-
-    this.modeSelect.addEventListener('change', (e) => {
-      if (this.onModeChange) {
-        this.onModeChange(e.target.value);
-      }
-    });
+    // Test Mode Dropdown binding
+    this.modeParams = { mode: '' };
+    this.modeBinding = globalFolder
+      .addBinding(this.modeParams, 'mode', {
+        label: 'Test Mode',
+        options: {},
+      })
+      .on('change', (ev) => {
+        if (ev.value && ev.value !== this.currentModeId) {
+          this.currentModeId = ev.value;
+          if (this.onModeChange) {
+            this.onModeChange(ev.value);
+          }
+        }
+      });
   }
 
-  updatePlayPauseUI() {
-    if (this.isPaused) {
-      this.toggleIcon.textContent = '▶';
-      this.toggleText.textContent = 'Play';
-    } else {
-      this.toggleIcon.textContent = '⏸';
-      this.toggleText.textContent = 'Pause';
-    }
+  populateModeList(modes, selectedId) {
+    this.currentModeId = selectedId;
+    this.modeParams.mode = selectedId;
+
+    // Convert mode array to Tweakpane options mapping: { 'Display Name': 'id' }
+    const options = {};
+    modes.forEach((m) => {
+      options[m.name] = m.id;
+    });
+
+    // Rebind dropdown with populated options
+    this.modeBinding.dispose();
+    const globalFolder = this.pane.children[0];
+    this.modeBinding = globalFolder
+      .addBinding(this.modeParams, 'mode', {
+        label: 'Test Mode',
+        options,
+      })
+      .on('change', (ev) => {
+        if (ev.value && ev.value !== this.currentModeId) {
+          this.currentModeId = ev.value;
+          if (this.onModeChange) {
+            this.onModeChange(ev.value);
+          }
+        }
+      });
   }
 
   renderModeControls(modeInstance) {
-    if (this.modeDescription) {
-      this.modeDescription.textContent = modeInstance.description || '';
+    if (this.hudModeName) {
+      this.hudModeName.textContent = modeInstance.name;
     }
 
-    this.modeControlsContainer.innerHTML = '';
+    // Dispose old mode parameter folder if exists
+    if (this.modeFolder) {
+      this.modeFolder.dispose();
+      this.modeFolder = null;
+    }
+
     const controls = modeInstance.getControls();
+    if (!controls || controls.length === 0) return;
+
+    this.modeFolder = this.pane.addFolder({
+      title: `${modeInstance.name} Params`,
+      expanded: true,
+    });
 
     controls.forEach((ctrl) => {
-      const item = document.createElement('div');
-      item.className = 'control-item';
-
       if (ctrl.type === 'range') {
-        const label = document.createElement('label');
-        label.htmlFor = `ctrl-${ctrl.id}`;
-        label.innerHTML = `${ctrl.label}: <span class="badge" id="val-${ctrl.id}">${ctrl.value}${ctrl.unit || ''}</span>`;
-
-        const input = document.createElement('input');
-        input.id = `ctrl-${ctrl.id}`;
-        input.type = 'range';
-        input.min = ctrl.min;
-        input.max = ctrl.max;
-        input.step = ctrl.step || 1;
-        input.value = ctrl.value;
-
-        input.addEventListener('input', (e) => {
-          const valBadge = document.getElementById(`val-${ctrl.id}`);
-          if (valBadge) {
-            valBadge.textContent = `${e.target.value}${ctrl.unit || ''}`;
-          }
-          ctrl.onChange(e.target.value);
-        });
-
-        item.appendChild(label);
-        item.appendChild(input);
+        const state = { [ctrl.id]: ctrl.value };
+        this.modeFolder
+          .addBinding(state, ctrl.id, {
+            label: ctrl.label,
+            min: ctrl.min,
+            max: ctrl.max,
+            step: ctrl.step || 1,
+          })
+          .on('change', (ev) => {
+            ctrl.onChange(ev.value);
+          });
       } else if (ctrl.type === 'checkbox') {
-        item.classList.add('control-item-checkbox');
-        const label = document.createElement('label');
-        label.className = 'checkbox-label';
-
-        const input = document.createElement('input');
-        input.id = `ctrl-${ctrl.id}`;
-        input.type = 'checkbox';
-        input.checked = !!ctrl.value;
-
-        input.addEventListener('change', (e) => {
-          ctrl.onChange(e.target.checked);
-        });
-
-        const span = document.createElement('span');
-        span.textContent = ctrl.label;
-
-        label.appendChild(input);
-        label.appendChild(span);
-        item.appendChild(label);
+        const state = { [ctrl.id]: !!ctrl.value };
+        this.modeFolder
+          .addBinding(state, ctrl.id, {
+            label: ctrl.label,
+          })
+          .on('change', (ev) => {
+            ctrl.onChange(ev.value);
+          });
       }
+    });
+  }
 
-      this.modeControlsContainer.appendChild(item);
+  bindKeyboardShortcuts() {
+    // Press 'H' to toggle GUI visibility for completely clean camera tracking testing
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'h' || e.key === 'H') {
+        const el = this.pane.element;
+        if (el) {
+          el.style.display = el.style.display === 'none' ? '' : 'none';
+        }
+      }
     });
   }
 }

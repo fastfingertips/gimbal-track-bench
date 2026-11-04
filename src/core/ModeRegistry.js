@@ -48,3 +48,4 @@ export class ModeRegistry {
     return this.activeMode;
   }
 }
+

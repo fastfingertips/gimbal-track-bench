@@ -1,7 +1,7 @@
 import Konva from 'konva';
 
 /**
- * CanvasManager handles stage creation, layer management, and resize events.
+ * CanvasManager handles full-screen Konva stage creation and layers.
  */
 export class CanvasManager {
   constructor(containerId) {
@@ -27,7 +27,7 @@ export class CanvasManager {
   getDimensions() {
     return {
       width: this.container.clientWidth || window.innerWidth,
-      height: this.container.clientHeight || (window.innerHeight - 100),
+      height: this.container.clientHeight || window.innerHeight,
     };
   }
 
