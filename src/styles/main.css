@@ -1,7 +1,13 @@
 :root {
-  /* VS Code Native Font Stacks */
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
-  --font-code: "Cascadia Code", "Fira Code", Consolas, Menlo, Monaco, "Courier New", monospace;
+  /* Official VS Code Font Stacks */
+  /* Windows: Segoe UI, Mac: -apple-system / SF Pro, Linux: system-ui / Ubuntu */
+  --font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-code: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
+
+  /* Authentic VS Code Font Weights */
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600; /* In VS Code, headings/section titles are 600 or 500, never heavy 700/800 */
 
   /* VS Code Dark+ / Modern Matte Theme Palette */
   --bg-primary: #1e1e1e;          /* VS Code Editor BG */
@@ -13,6 +19,7 @@
   --border-subtle: #3e3e42;       /* Subtle dark border */
   --text-main: #cccccc;           /* VS Code Main Text */
   --text-muted: #858585;          /* VS Code Muted Text */
+  --text-heading: #e0e0e0;        /* VS Code Section Header Text */
 }
 
 * {
@@ -29,9 +36,9 @@ body {
   font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.4;
-  letter-spacing: 0.15px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: normal;
+  -webkit-font-smoothing: subpixel-antialiased; /* Windows/VS Code native rendering */
+  -moz-osx-font-smoothing: auto;
   background-color: var(--bg-primary);
   color: var(--text-main);
   user-select: none;
@@ -67,11 +74,12 @@ body {
   background: rgba(37, 37, 38, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: 4px;
   padding: 6px 12px;
   color: var(--text-main);
   font-family: var(--font-ui);
   font-size: 12px;
+  font-weight: var(--fw-normal);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -90,12 +98,12 @@ body {
   font-size: 11px;
   text-transform: uppercase;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   letter-spacing: 0.5px;
 }
 
 .trigger-active-name {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   color: var(--vscode-blue-hover);
 }
 
@@ -117,7 +125,7 @@ body {
   background: rgba(30, 30, 32, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: 4px;
   padding: 5px;
   display: flex;
   flex-direction: column;
@@ -137,13 +145,13 @@ body {
   appearance: none;
   background: transparent;
   border: none;
-  border-radius: 4px;
-  padding: 7px 10px;
+  border-radius: 3px;
+  padding: 6px 10px;
   text-align: left;
   color: var(--text-muted);
   font-family: var(--font-ui);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--fw-normal);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -159,7 +167,7 @@ body {
 .mode-item-btn.active {
   background: var(--vscode-blue-muted);
   color: var(--vscode-blue-hover);
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .mode-item-dot {
@@ -192,15 +200,15 @@ body {
 .active-mode-title {
   font-family: var(--font-code);
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.6px;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.5px;
   color: #dfdfdf;
   text-transform: uppercase;
 }
 
 .active-mode-line {
   margin-top: 5px;
-  width: 38px;
+  width: 36px;
   height: 2px;
   background-color: var(--vscode-blue);
   border-radius: 2px;
@@ -217,7 +225,7 @@ body {
   background: rgba(26, 26, 28, 0.96);
   backdrop-filter: blur(18px);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: 4px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
@@ -241,7 +249,7 @@ body {
 }
 
 .inspector-header {
-  padding: 8px 12px;
+  padding: 7px 12px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
@@ -258,21 +266,21 @@ body {
 .inspector-badge {
   font-family: var(--font-code);
   font-size: 9px;
-  font-weight: 700;
+  font-weight: var(--fw-semibold);
   background: #ff5555;
   color: #ffffff;
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: 2px;
   letter-spacing: 0.5px;
 }
 
 .inspector-title {
   font-family: var(--font-ui);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-main);
+  color: var(--text-heading);
 }
 
 .inspector-close-btn {
@@ -295,16 +303,16 @@ body {
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   max-height: 380px;
   overflow-y: auto;
 }
 
 /* Entity Section Box */
 .inspector-entity-section {
-  background: rgba(34, 34, 38, 0.6);
+  background: rgba(34, 34, 38, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 5px;
+  border-radius: 4px;
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -326,18 +334,19 @@ body {
 }
 
 .entity-color-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
   box-shadow: 0 0 6px currentColor;
 }
 
 .entity-title {
+  font-family: var(--font-ui);
   font-size: 11px;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 0.2px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-heading);
+  letter-spacing: 0.1px;
 }
 
 .entity-cat-badge {
@@ -367,6 +376,7 @@ body {
   justify-content: space-between;
   align-items: center;
   font-size: 11px;
+  font-weight: var(--fw-normal);
   color: var(--text-muted);
 }
 
@@ -374,6 +384,7 @@ body {
   font-family: var(--font-code);
   color: var(--vscode-blue-hover);
   font-size: 11px;
+  font-weight: var(--fw-normal);
 }
 
 .inspector-input-range {
@@ -388,8 +399,8 @@ body {
 
 .inspector-input-range::-webkit-slider-thumb {
   appearance: none;
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--vscode-blue);
   cursor: pointer;
@@ -398,16 +409,16 @@ body {
 }
 
 .inspector-input-range::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.15);
 }
 
 .inspector-input-color {
   appearance: none;
   border: 1px solid var(--border-subtle);
   background: transparent;
-  width: 20px;
-  height: 18px;
-  border-radius: 3px;
+  width: 18px;
+  height: 16px;
+  border-radius: 2px;
   cursor: pointer;
   padding: 0;
 }
@@ -415,8 +426,8 @@ body {
 .inspector-input-checkbox {
   accent-color: var(--vscode-blue);
   cursor: pointer;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 .inspector-footer {
@@ -491,22 +502,23 @@ body {
   border: 1px solid var(--border-subtle) !important;
   font-family: var(--font-ui) !important;
   font-size: 12px !important;
-  letter-spacing: 0.2px !important;
+  letter-spacing: normal !important;
 }
 
-/* Tweakpane typography overrides */
+/* Tweakpane authentic VS Code typography overrides */
 .tp-fldv_t {
   font-family: var(--font-ui) !important;
   font-size: 11px !important;
-  font-weight: 700 !important;
+  font-weight: var(--fw-semibold) !important; /* 600 weight, not harsh 700 */
   text-transform: uppercase !important;
-  letter-spacing: 0.8px !important;
-  color: #bbbbbb !important;
+  letter-spacing: 0.6px !important;
+  color: var(--text-heading) !important;
 }
 
 .tp-lblv_l {
   font-family: var(--font-ui) !important;
   font-size: 12px !important;
+  font-weight: var(--fw-normal) !important;
   color: var(--text-muted) !important;
 }
 
@@ -515,11 +527,17 @@ body {
 .tp-btnv_b {
   font-family: var(--font-ui) !important;
   font-size: 12px !important;
+  font-weight: var(--fw-normal) !important;
+}
+
+.tp-btnv_b {
+  font-weight: var(--fw-medium) !important;
 }
 
 .tp-sldv_t {
   font-family: var(--font-code) !important;
   font-size: 11px !important;
+  font-weight: var(--fw-normal) !important;
 }
 
 /* ========================================================
@@ -555,8 +573,8 @@ body {
 .ghost-github-badge .repo-text {
   font-family: var(--font-code);
   font-size: 12px;
-  font-weight: 400;
-  letter-spacing: -0.2px;
+  font-weight: var(--fw-normal);
+  letter-spacing: normal;
   max-width: 0;
   overflow: hidden;
   white-space: nowrap;

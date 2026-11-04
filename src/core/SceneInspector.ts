@@ -24,3 +24,4 @@ export interface InspectableEntity {
 export interface ModeSceneEntitiesProvider {
   getInspectableEntities: () => InspectableEntity[];
 }
+
