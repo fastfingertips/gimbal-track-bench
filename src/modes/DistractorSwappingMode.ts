@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { BaseMode } from '../core/BaseMode';
 import type { ModeControlSpec } from '../core/BaseMode';
 import type { GlobalSettings } from '../core/GlobalConfig';
+import type { InspectableEntity } from '../core/SceneInspector';
 
 export class DistractorSwappingMode extends BaseMode {
   private primaryRadius: number = 36;
@@ -78,6 +79,143 @@ export class DistractorSwappingMode extends BaseMode {
           this.distractorColor = val;
           this.updateDistractorColor();
         },
+      },
+    ];
+  }
+
+  public override getSceneEntities(): InspectableEntity[] {
+    const primaryColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
+    const actualDistractorColor = this.distractorColor === 'SAME' ? primaryColor : this.distractorColor;
+
+    return [
+      {
+        id: 'target-a',
+        name: 'Target A (Primary Subject)',
+        category: 'target',
+        colorTag: primaryColor,
+        position: this.primaryGroup ? { x: Math.round(this.primaryGroup.x()), y: Math.round(this.primaryGroup.y()) } : undefined,
+        properties: [
+          {
+            id: 'target-a-x',
+            label: 'Position X',
+            type: 'slider',
+            min: 50,
+            max: this.canvasManager ? this.canvasManager.getDimensions().width - 50 : 1920,
+            step: 5,
+            value: this.primaryGroup ? Math.round(this.primaryGroup.x()) : 0,
+            onChange: (val) => {
+              if (this.primaryGroup) {
+                this.primaryGroup.x(val);
+                this.primaryLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'target-a-y',
+            label: 'Position Y',
+            type: 'slider',
+            min: 50,
+            max: this.canvasManager ? this.canvasManager.getDimensions().height - 50 : 1080,
+            step: 5,
+            value: this.primaryGroup ? Math.round(this.primaryGroup.y()) : 0,
+            onChange: (val) => {
+              if (this.primaryGroup) {
+                this.primaryGroup.y(val);
+                this.primaryLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'target-a-radius',
+            label: 'Radius',
+            type: 'slider',
+            min: 15,
+            max: 100,
+            step: 2,
+            value: this.primaryRadius,
+            onChange: (val) => {
+              this.primaryRadius = val;
+              if (this.primaryCircle) {
+                this.primaryCircle.radius(val);
+                this.primaryLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'target-a-color',
+            label: 'Color',
+            type: 'color',
+            value: primaryColor,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('targetColor', val);
+            },
+          },
+        ],
+      },
+      {
+        id: 'distractor-b',
+        name: 'Target B (Distractor Imposter)',
+        category: 'target',
+        colorTag: actualDistractorColor,
+        position: this.distractorGroup ? { x: Math.round(this.distractorGroup.x()), y: Math.round(this.distractorGroup.y()) } : undefined,
+        properties: [
+          {
+            id: 'distractor-b-x',
+            label: 'Position X',
+            type: 'slider',
+            min: 50,
+            max: this.canvasManager ? this.canvasManager.getDimensions().width - 50 : 1920,
+            step: 5,
+            value: this.distractorGroup ? Math.round(this.distractorGroup.x()) : 0,
+            onChange: (val) => {
+              if (this.distractorGroup) {
+                this.distractorGroup.x(val);
+                this.distractorLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'distractor-b-y',
+            label: 'Position Y',
+            type: 'slider',
+            min: 50,
+            max: this.canvasManager ? this.canvasManager.getDimensions().height - 50 : 1080,
+            step: 5,
+            value: this.distractorGroup ? Math.round(this.distractorGroup.y()) : 0,
+            onChange: (val) => {
+              if (this.distractorGroup) {
+                this.distractorGroup.y(val);
+                this.distractorLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'distractor-b-radius',
+            label: 'Radius',
+            type: 'slider',
+            min: 15,
+            max: 100,
+            step: 2,
+            value: this.distractorRadius,
+            onChange: (val) => {
+              this.distractorRadius = val;
+              if (this.distractorCircle) {
+                this.distractorCircle.radius(val);
+                this.distractorLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'distractor-b-color',
+            label: 'Color',
+            type: 'color',
+            value: actualDistractorColor,
+            onChange: (val) => {
+              this.distractorColor = val;
+              this.updateDistractorColor();
+            },
+          },
+        ],
       },
     ];
   }
@@ -267,4 +405,3 @@ export class DistractorSwappingMode extends BaseMode {
     }
   }
 }
-

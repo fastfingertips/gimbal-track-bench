@@ -1,5 +1,6 @@
 import type { CanvasManager, CanvasDimensions } from './CanvasManager';
 import type { GlobalConfig, GlobalSettings } from './GlobalConfig';
+import type { InspectableEntity } from './SceneInspector';
 
 export interface BaseModeOptions {
   id: string;
@@ -44,6 +45,14 @@ export abstract class BaseMode {
     return [];
   }
 
+  /**
+   * Returns a complete list of every interactive entity currently in the canvas scene:
+   * Target(s), Obstacle(s), Guides/Waypoints, Grid & Environment.
+   */
+  public getSceneEntities(): InspectableEntity[] {
+    return [];
+  }
+
   public mount(canvasManager: CanvasManager, globalConfig: GlobalConfig): void {
     this.canvasManager = canvasManager;
     this.globalConfig = globalConfig;
@@ -82,4 +91,3 @@ export abstract class BaseMode {
 
   public cleanupAnimation(): void {}
 }
-

@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { BaseMode } from '../core/BaseMode';
 import type { ModeControlSpec } from '../core/BaseMode';
 import type { GlobalSettings } from '../core/GlobalConfig';
+import type { InspectableEntity } from '../core/SceneInspector';
 
 export class LinearOcclusionMode extends BaseMode {
   private radius: number = 40;
@@ -98,6 +99,146 @@ export class LinearOcclusionMode extends BaseMode {
         },
       },
     ];
+  }
+
+  public override getSceneEntities(): InspectableEntity[] {
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
+    const targetGlow = this.globalConfig ? this.globalConfig.get('targetGlow') : true;
+    const glowBlur = this.globalConfig ? this.globalConfig.get('glowBlur') : 14;
+    const obstacleColor = this.globalConfig ? this.globalConfig.get('obstacleColor') : '#141414';
+    const obstacleOpacity = this.globalConfig ? this.globalConfig.get('obstacleOpacity') : 1.0;
+
+    const entities: InspectableEntity[] = [
+      {
+        id: 'primary-target',
+        name: 'Target (Gimbal Subject)',
+        category: 'target',
+        colorTag: targetColor,
+        position: this.target ? { x: Math.round(this.target.x()), y: Math.round(this.target.y()) } : undefined,
+        properties: [
+          {
+            id: 'target-pos-x',
+            label: 'X Position',
+            type: 'slider',
+            min: this.radius,
+            max: this.canvasManager ? this.canvasManager.getDimensions().width - this.radius : 1920,
+            step: 5,
+            value: this.target ? Math.round(this.target.x()) : 0,
+            onChange: (val) => {
+              if (this.target) {
+                this.target.x(val);
+                this.targetLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'target-pos-y',
+            label: 'Y Position',
+            type: 'slider',
+            min: this.radius,
+            max: this.canvasManager ? this.canvasManager.getDimensions().height - this.radius : 1080,
+            step: 5,
+            value: this.target ? Math.round(this.target.y()) : 0,
+            onChange: (val) => {
+              if (this.target) {
+                this.target.y(val);
+                this.targetLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'target-radius',
+            label: 'Radius / Scale',
+            type: 'slider',
+            min: 10,
+            max: 120,
+            step: 2,
+            value: this.radius,
+            onChange: (val) => {
+              this.radius = val;
+              if (this.target) {
+                this.target.radius(val);
+                this.targetLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'target-color',
+            label: 'Fill Color',
+            type: 'color',
+            value: targetColor,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('targetColor', val);
+            },
+          },
+          {
+            id: 'target-glow',
+            label: 'Neon Glow',
+            type: 'boolean',
+            value: targetGlow,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('targetGlow', val);
+            },
+          },
+          {
+            id: 'glow-blur',
+            label: 'Glow Intensity',
+            type: 'slider',
+            min: 0,
+            max: 50,
+            step: 2,
+            value: glowBlur,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('glowBlur', val);
+            },
+          },
+        ],
+      },
+      {
+        id: 'center-obstacle',
+        name: `Obstacle (${this.obstacleCount} Pillar${this.obstacleCount > 1 ? 's' : ''})`,
+        category: 'obstacle',
+        colorTag: obstacleColor,
+        properties: [
+          {
+            id: 'obs-width',
+            label: 'Pillar Width',
+            type: 'slider',
+            min: 20,
+            max: 900,
+            step: 10,
+            value: this.obstacleWidth,
+            onChange: (val) => {
+              this.obstacleWidth = val;
+              this.updateObstacles();
+            },
+          },
+          {
+            id: 'obs-color',
+            label: 'Obstacle Color',
+            type: 'color',
+            value: obstacleColor,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('obstacleColor', val);
+            },
+          },
+          {
+            id: 'obs-opacity',
+            label: 'Opacity (Alpha)',
+            type: 'slider',
+            min: 0.05,
+            max: 1.0,
+            step: 0.05,
+            value: obstacleOpacity,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('obstacleOpacity', val);
+            },
+          },
+        ],
+      },
+    ];
+
+    return entities;
   }
 
   public setupElements(): void {
@@ -246,4 +387,3 @@ export class LinearOcclusionMode extends BaseMode {
     }
   }
 }
-

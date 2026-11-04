@@ -2,6 +2,7 @@ import { Pane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import type { BaseMode } from '../core/BaseMode';
 import type { GlobalConfig } from '../core/GlobalConfig';
+import type { InspectableEntity } from '../core/SceneInspector';
 
 export interface UIManagerOptions {
   onPlayPauseToggle: (isPaused: boolean) => void;
@@ -30,7 +31,7 @@ export class UIManager {
   private guiContainer: HTMLElement | null;
   private toggleMenuBtn: HTMLElement | null;
 
-  // Canvas Quick Inspector elements
+  // Scene-Wide Inspector HUD elements
   private canvasInspector: HTMLElement | null;
   private inspectorTitle: HTMLElement | null;
   private inspectorBody: HTMLElement | null;
@@ -279,7 +280,7 @@ export class UIManager {
           })
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
-            this.syncInspectorValues(ctrl.id, ev.value);
+            this.pane.refresh();
           });
       } else if (ctrl.type === 'select') {
         const state = { [ctrl.id]: ctrl.value };
@@ -290,7 +291,7 @@ export class UIManager {
           })
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
-            this.syncInspectorValues(ctrl.id, ev.value);
+            this.pane.refresh();
           });
       } else if (ctrl.type === 'checkbox') {
         const state = { [ctrl.id]: !!ctrl.value };
@@ -300,34 +301,33 @@ export class UIManager {
           })
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
-            this.syncInspectorValues(ctrl.id, ev.value);
+            this.pane.refresh();
           });
       }
     });
   }
 
   // -------------------------------------------------------------
-  // CANVAS CLICK INSPECTOR & PAUSE LOGIC
+  // FULL SCENE INSPECTOR (INSPECT EVERYTHING IN CANVAS)
   // -------------------------------------------------------------
   private bindCanvasInteraction(): void {
     const canvasContainer = document.getElementById('canvas-container');
     if (!canvasContainer) return;
 
     canvasContainer.addEventListener('click', (e: MouseEvent) => {
-      // If user clicked directly on canvas (not on any HUD/menu)
       if (this.isDropdownOpen) {
         this.closeDropdown();
         return;
       }
 
-      // If inspector is currently visible, clicking canvas resumes playback and hides inspector
+      // If full scene inspector is already open, clicking background resumes and closes it
       if (this.canvasInspector && !this.canvasInspector.classList.contains('hidden')) {
         this.hideInspectorAndResume();
         return;
       }
 
-      // Pause playback and open quick property inspector at click location
-      this.pauseAndShowInspector(e.clientX, e.clientY);
+      // Pause playback and list EVERY entity on the scene
+      this.pauseAndShowSceneInspector(e.clientX, e.clientY);
     });
 
     if (this.closeInspectorBtn) {
@@ -338,7 +338,7 @@ export class UIManager {
     }
   }
 
-  public pauseAndShowInspector(clickX: number, clickY: number): void {
+  public pauseAndShowSceneInspector(clickX: number, clickY: number): void {
     if (!this.isPaused) {
       this.togglePlayPause();
     }
@@ -346,91 +346,168 @@ export class UIManager {
     if (!this.canvasInspector || !this.inspectorBody || !this.activeModeRef) return;
 
     if (this.inspectorTitle) {
-      this.inspectorTitle.textContent = `${this.activeModeRef.name.split('(')[0].trim()} Properties`;
+      this.inspectorTitle.textContent = `Scene Inspector (${this.activeModeRef.name.split('(')[0].trim()})`;
     }
 
     this.inspectorBody.innerHTML = '';
-    const controls = this.activeModeRef.getControls();
 
-    controls.forEach((ctrl) => {
-      const row = document.createElement('div');
-      row.className = 'inspector-item';
+    // Collect ALL entities from the active test mode
+    const modeEntities = this.activeModeRef.getSceneEntities();
 
-      if (ctrl.type === 'range') {
+    // Environment & Grid entities from GlobalConfig
+    const environmentEntity: InspectableEntity = {
+      id: 'env-grid',
+      name: 'Canvas Environment & Grid',
+      category: 'environment',
+      colorTag: this.globalConfig.get('gridColor'),
+      properties: [
+        {
+          id: 'env-bg-color',
+          label: 'Background Color',
+          type: 'color',
+          value: this.globalConfig.get('backgroundColor'),
+          onChange: (val) => this.globalConfig.set('backgroundColor', val),
+        },
+        {
+          id: 'env-grid-show',
+          label: 'Show Reference Grid',
+          type: 'boolean',
+          value: this.globalConfig.get('showGrid'),
+          onChange: (val) => this.globalConfig.set('showGrid', val),
+        },
+        {
+          id: 'env-grid-spacing',
+          label: 'Grid Spacing (px)',
+          type: 'slider',
+          min: 30,
+          max: 150,
+          step: 10,
+          value: this.globalConfig.get('gridSpacing'),
+          onChange: (val) => this.globalConfig.set('gridSpacing', val),
+        },
+        {
+          id: 'env-crosshair',
+          label: 'Center Alignment Reticle',
+          type: 'boolean',
+          value: this.globalConfig.get('crosshair'),
+          onChange: (val) => this.globalConfig.set('crosshair', val),
+        },
+      ],
+    };
+
+    const allEntities = [...modeEntities, environmentEntity];
+
+    // Render every entity in a categorized, accordion-like section
+    allEntities.forEach((entity) => {
+      const section = document.createElement('div');
+      section.className = 'inspector-entity-section';
+
+      // Section Header (Entity Title + Color dot + Category)
+      const secHeader = document.createElement('div');
+      secHeader.className = 'entity-section-header';
+
+      const leftWrap = document.createElement('div');
+      leftWrap.className = 'entity-header-left';
+
+      const dot = document.createElement('span');
+      dot.className = 'entity-color-dot';
+      dot.style.backgroundColor = entity.colorTag;
+
+      const title = document.createElement('span');
+      title.className = 'entity-title';
+      title.textContent = entity.name;
+
+      leftWrap.appendChild(dot);
+      leftWrap.appendChild(title);
+
+      const catBadge = document.createElement('span');
+      catBadge.className = 'entity-cat-badge';
+      catBadge.textContent = entity.category.toUpperCase();
+
+      secHeader.appendChild(leftWrap);
+      secHeader.appendChild(catBadge);
+      section.appendChild(secHeader);
+
+      // Section Properties
+      const propsContainer = document.createElement('div');
+      propsContainer.className = 'entity-props-container';
+
+      entity.properties.forEach((prop) => {
+        const item = document.createElement('div');
+        item.className = 'inspector-item';
+
         const labelRow = document.createElement('div');
         labelRow.className = 'inspector-label-row';
 
         const nameSpan = document.createElement('span');
-        nameSpan.textContent = ctrl.label;
-
-        const valSpan = document.createElement('span');
-        valSpan.className = 'inspector-val';
-        valSpan.id = `insp-val-${ctrl.id}`;
-        valSpan.textContent = String(ctrl.value);
-
-        labelRow.appendChild(nameSpan);
-        labelRow.appendChild(valSpan);
-
-        const input = document.createElement('input');
-        input.type = 'range';
-        input.className = 'inspector-input-range';
-        input.id = `insp-input-${ctrl.id}`;
-        input.min = String(ctrl.min ?? 0);
-        input.max = String(ctrl.max ?? 100);
-        input.step = String(ctrl.step ?? 1);
-        input.value = String(ctrl.value);
-
-        input.addEventListener('input', (ev) => {
-          const v = parseFloat((ev.target as HTMLInputElement).value);
-          valSpan.textContent = String(v);
-          ctrl.onChange(v);
-          this.pane.refresh();
-        });
-
-        row.appendChild(labelRow);
-        row.appendChild(input);
-      } else if (ctrl.type === 'select') {
-        const labelRow = document.createElement('div');
-        labelRow.className = 'inspector-label-row';
-
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = ctrl.label;
+        nameSpan.textContent = prop.label;
         labelRow.appendChild(nameSpan);
 
-        const select = document.createElement('select');
-        select.className = 'inspector-select';
-        select.id = `insp-input-${ctrl.id}`;
+        if (prop.type === 'slider' || prop.type === 'number') {
+          const valSpan = document.createElement('span');
+          valSpan.className = 'inspector-val';
+          valSpan.textContent = String(prop.value);
+          labelRow.appendChild(valSpan);
+          item.appendChild(labelRow);
 
-        if (ctrl.options) {
-          Object.entries(ctrl.options).forEach(([optLabel, optVal]) => {
-            const opt = document.createElement('option');
-            opt.value = String(optVal);
-            opt.textContent = optLabel;
-            if (String(optVal) === String(ctrl.value)) {
-              opt.selected = true;
-            }
-            select.appendChild(opt);
+          const input = document.createElement('input');
+          input.type = 'range';
+          input.className = 'inspector-input-range';
+          input.min = String(prop.min ?? 0);
+          input.max = String(prop.max ?? 100);
+          input.step = String(prop.step ?? 1);
+          input.value = String(prop.value);
+
+          input.addEventListener('input', (ev) => {
+            const v = parseFloat((ev.target as HTMLInputElement).value);
+            valSpan.textContent = String(v);
+            prop.onChange(v);
+            this.pane.refresh();
           });
+
+          item.appendChild(input);
+        } else if (prop.type === 'color') {
+          const colorInput = document.createElement('input');
+          colorInput.type = 'color';
+          colorInput.className = 'inspector-input-color';
+          colorInput.value = String(prop.value);
+
+          colorInput.addEventListener('input', (ev) => {
+            const val = (ev.target as HTMLInputElement).value;
+            dot.style.backgroundColor = val;
+            prop.onChange(val);
+            this.pane.refresh();
+          });
+
+          labelRow.appendChild(colorInput);
+          item.appendChild(labelRow);
+        } else if (prop.type === 'boolean') {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'inspector-input-checkbox';
+          checkbox.checked = !!prop.value;
+
+          checkbox.addEventListener('change', (ev) => {
+            prop.onChange((ev.target as HTMLInputElement).checked);
+            this.pane.refresh();
+          });
+
+          labelRow.appendChild(checkbox);
+          item.appendChild(labelRow);
         }
 
-        select.addEventListener('change', (ev) => {
-          const v = (ev.target as HTMLSelectElement).value;
-          ctrl.onChange(v);
-          this.pane.refresh();
-        });
+        propsContainer.appendChild(item);
+      });
 
-        row.appendChild(labelRow);
-        row.appendChild(select);
-      }
-
-      this.inspectorBody.appendChild(row);
+      section.appendChild(propsContainer);
+      this.inspectorBody.appendChild(section);
     });
 
-    // Position inspector intelligently near click position but within screen bounds
+    // Intelligent positioning near click
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
-    const panelW = 290;
-    const panelH = 260;
+    const panelW = 320;
+    const panelH = 420;
 
     let posX = clickX + 15;
     let posY = clickY + 15;
@@ -456,14 +533,6 @@ export class UIManager {
     if (this.isPaused) {
       this.togglePlayPause();
     }
-  }
-
-  private syncInspectorValues(ctrlId: string, val: any): void {
-    const valSpan = document.getElementById(`insp-val-${ctrlId}`);
-    if (valSpan) valSpan.textContent = String(val);
-
-    const input = document.getElementById(`insp-input-${ctrlId}`) as HTMLInputElement | HTMLSelectElement;
-    if (input) input.value = String(val);
   }
 
   public toggleDropdown(): void {

@@ -208,17 +208,17 @@ body {
 }
 
 /* ========================================================
-   3. ON-CANVAS CLICK INSPECTOR / QUICK TUNING HUD
+   3. SCENE-WIDE INSPECTOR HUD (INSPECT EVERY SCENE ENTITY)
    ======================================================== */
 .canvas-inspector {
   position: fixed;
   z-index: 1000;
-  width: 290px;
-  background: rgba(30, 30, 32, 0.94);
-  backdrop-filter: blur(16px);
+  width: 330px;
+  background: rgba(26, 26, 28, 0.96);
+  backdrop-filter: blur(18px);
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -228,7 +228,7 @@ body {
 @keyframes inspectorFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(4px);
+    transform: scale(0.96) translateY(4px);
   }
   to {
     opacity: 1;
@@ -295,15 +295,71 @@ body {
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 280px;
+  gap: 12px;
+  max-height: 380px;
   overflow-y: auto;
+}
+
+/* Entity Section Box */
+.inspector-entity-section {
+  background: rgba(34, 34, 38, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entity-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 5px;
+}
+
+.entity-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.entity-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.entity-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+.entity-cat-badge {
+  font-family: var(--font-code);
+  font-size: 8px;
+  color: #888892;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 4px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.entity-props-container {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 }
 
 .inspector-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .inspector-label-row {
@@ -345,15 +401,22 @@ body {
   transform: scale(1.2);
 }
 
-.inspector-select {
-  background: #252526;
+.inspector-input-color {
+  appearance: none;
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  color: var(--text-main);
-  font-size: 11px;
-  padding: 4px 6px;
-  outline: none;
+  background: transparent;
+  width: 20px;
+  height: 18px;
+  border-radius: 3px;
   cursor: pointer;
+  padding: 0;
+}
+
+.inspector-input-checkbox {
+  accent-color: var(--vscode-blue);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
 }
 
 .inspector-footer {

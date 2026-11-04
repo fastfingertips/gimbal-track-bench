@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { BaseMode } from '../core/BaseMode';
 import type { ModeControlSpec } from '../core/BaseMode';
 import type { GlobalSettings } from '../core/GlobalConfig';
+import type { InspectableEntity } from '../core/SceneInspector';
 
 export class DepthZoomMode extends BaseMode {
   private minRadius: number = 15;
@@ -65,6 +66,102 @@ export class DepthZoomMode extends BaseMode {
           this.minRadius = val;
           this.setupAnimation();
         },
+      },
+    ];
+  }
+
+  public override getSceneEntities(): InspectableEntity[] {
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
+
+    return [
+      {
+        id: 'depth-target',
+        name: 'Scaling Target (Perspective Body)',
+        category: 'target',
+        colorTag: targetColor,
+        position: this.target ? { x: Math.round(this.target.x()), y: Math.round(this.target.y()) } : undefined,
+        properties: [
+          {
+            id: 'depth-x',
+            label: 'Center X',
+            type: 'slider',
+            min: 50,
+            max: this.canvasManager ? this.canvasManager.getDimensions().width - 50 : 1920,
+            step: 5,
+            value: this.target ? Math.round(this.target.x()) : 0,
+            onChange: (val) => {
+              if (this.target) {
+                this.target.x(val);
+                this.targetLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'depth-y',
+            label: 'Center Y',
+            type: 'slider',
+            min: 50,
+            max: this.canvasManager ? this.canvasManager.getDimensions().height - 50 : 1080,
+            step: 5,
+            value: this.target ? Math.round(this.target.y()) : 0,
+            onChange: (val) => {
+              if (this.target) {
+                this.target.y(val);
+                this.targetLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'current-radius',
+            label: 'Instant Radius',
+            type: 'slider',
+            min: 10,
+            max: 200,
+            step: 2,
+            value: this.target ? Math.round(this.target.radius()) : this.minRadius,
+            onChange: (val) => {
+              if (this.target) {
+                this.target.radius(val);
+                this.targetLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'max-zoom-bound',
+            label: 'Max Close-Up Limit',
+            type: 'slider',
+            min: 60,
+            max: 200,
+            step: 5,
+            value: this.maxRadius,
+            onChange: (val) => {
+              this.maxRadius = val;
+              this.setupAnimation();
+            },
+          },
+          {
+            id: 'min-zoom-bound',
+            label: 'Min Distance Limit',
+            type: 'slider',
+            min: 10,
+            max: 50,
+            step: 2,
+            value: this.minRadius,
+            onChange: (val) => {
+              this.minRadius = val;
+              this.setupAnimation();
+            },
+          },
+          {
+            id: 'target-color',
+            label: 'Color',
+            type: 'color',
+            value: targetColor,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('targetColor', val);
+            },
+          },
+        ],
       },
     ];
   }
@@ -180,4 +277,3 @@ export class DepthZoomMode extends BaseMode {
     }
   }
 }
-

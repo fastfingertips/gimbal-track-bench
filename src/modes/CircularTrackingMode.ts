@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { BaseMode } from '../core/BaseMode';
 import type { ModeControlSpec } from '../core/BaseMode';
 import type { GlobalSettings } from '../core/GlobalConfig';
+import type { InspectableEntity } from '../core/SceneInspector';
 
 export class CircularTrackingMode extends BaseMode {
   private radius: number = 35;
@@ -94,6 +95,81 @@ export class CircularTrackingMode extends BaseMode {
             this.guideLayer.batchDraw();
           }
         },
+      },
+    ];
+  }
+
+  public override getSceneEntities(): InspectableEntity[] {
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
+
+    return [
+      {
+        id: 'orbit-target',
+        name: 'Target (Orbiting Body)',
+        category: 'target',
+        colorTag: targetColor,
+        position: this.target ? { x: Math.round(this.target.x()), y: Math.round(this.target.y()) } : undefined,
+        properties: [
+          {
+            id: 'orbit-target-radius',
+            label: 'Target Radius',
+            type: 'slider',
+            min: 10,
+            max: 100,
+            step: 2,
+            value: this.radius,
+            onChange: (val) => {
+              this.radius = val;
+              if (this.target) {
+                this.target.radius(val);
+                this.targetLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'orbit-target-color',
+            label: 'Fill Color',
+            type: 'color',
+            value: targetColor,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('targetColor', val);
+            },
+          },
+        ],
+      },
+      {
+        id: 'orbit-guide-path',
+        name: 'Orbit Guide Path',
+        category: 'environment',
+        colorTag: '#333338',
+        properties: [
+          {
+            id: 'orbit-guide-visible',
+            label: 'Show Path Ring',
+            type: 'boolean',
+            value: this.showTrail,
+            onChange: (val) => {
+              this.showTrail = val;
+              if (this.guideEllipse) {
+                this.guideEllipse.visible(val);
+                this.guideLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'orbit-guide-size',
+            label: 'Orbit Radius %',
+            type: 'slider',
+            min: 10,
+            max: 48,
+            step: 1,
+            value: Math.round(this.orbitRadiusRatio * 100),
+            onChange: (val) => {
+              this.orbitRadiusRatio = val / 100;
+              this.updateOrbitGuide();
+            },
+          },
+        ],
       },
     ];
   }
@@ -221,4 +297,3 @@ export class CircularTrackingMode extends BaseMode {
     }
   }
 }
-

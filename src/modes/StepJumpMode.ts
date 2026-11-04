@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { BaseMode } from '../core/BaseMode';
 import type { ModeControlSpec } from '../core/BaseMode';
 import type { GlobalSettings } from '../core/GlobalConfig';
+import type { InspectableEntity } from '../core/SceneInspector';
 
 interface Waypoint {
   x: number;
@@ -102,6 +103,94 @@ export class StepJumpMode extends BaseMode {
             this.waypointsLayer.batchDraw();
           }
         },
+      },
+    ];
+  }
+
+  public override getSceneEntities(): InspectableEntity[] {
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
+
+    return [
+      {
+        id: 'saccade-target',
+        name: 'Target (Saccade Jumper)',
+        category: 'target',
+        colorTag: targetColor,
+        position: this.target ? { x: Math.round(this.target.x()), y: Math.round(this.target.y()) } : undefined,
+        properties: [
+          {
+            id: 'saccade-radius',
+            label: 'Target Radius',
+            type: 'slider',
+            min: 10,
+            max: 100,
+            step: 5,
+            value: this.radius,
+            onChange: (val) => {
+              this.radius = val;
+              if (this.target) {
+                this.target.radius(val);
+                this.targetLayer.batchDraw();
+              }
+            },
+          },
+          {
+            id: 'saccade-hold',
+            label: 'Dwell Time (Hold sec)',
+            type: 'slider',
+            min: 0.2,
+            max: 5.0,
+            step: 0.1,
+            value: this.holdDuration,
+            onChange: (val) => {
+              this.holdDuration = val;
+              this.setupAnimation();
+            },
+          },
+          {
+            id: 'saccade-jump-speed',
+            label: 'Jump Transition Speed',
+            type: 'slider',
+            min: 0.0,
+            max: 1.0,
+            step: 0.05,
+            value: this.jumpDuration,
+            onChange: (val) => {
+              this.jumpDuration = val;
+              this.setupAnimation();
+            },
+          },
+          {
+            id: 'saccade-color',
+            label: 'Color',
+            type: 'color',
+            value: targetColor,
+            onChange: (val) => {
+              if (this.globalConfig) this.globalConfig.set('targetColor', val);
+            },
+          },
+        ],
+      },
+      {
+        id: 'waypoint-markers',
+        name: 'Waypoint Reticles',
+        category: 'environment',
+        colorTag: '#555560',
+        properties: [
+          {
+            id: 'waypoints-visible',
+            label: 'Show Marker Rings',
+            type: 'boolean',
+            value: this.showMarkers,
+            onChange: (val) => {
+              this.showMarkers = val;
+              if (this.waypointsLayer) {
+                this.waypointsLayer.visible(val);
+                this.waypointsLayer.batchDraw();
+              }
+            },
+          },
+        ],
       },
     ];
   }
@@ -252,4 +341,3 @@ export class StepJumpMode extends BaseMode {
     }
   }
 }
-
