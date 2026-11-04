@@ -2,9 +2,10 @@
  * ModeRegistry manages registered test modes and handles mode switching.
  */
 export class ModeRegistry {
-  constructor(canvasManager, uiManager) {
+  constructor(canvasManager, uiManager, globalConfig) {
     this.canvasManager = canvasManager;
     this.uiManager = uiManager;
+    this.globalConfig = globalConfig;
     this.modes = new Map();
     this.activeMode = null;
   }
@@ -33,12 +34,16 @@ export class ModeRegistry {
     }
 
     this.activeMode = nextMode;
-    this.activeMode.mount(this.canvasManager);
+    this.activeMode.mount(this.canvasManager, this.globalConfig);
+
+    // Refresh background and grid in case layers were cleared
+    if (this.globalConfig) {
+      this.globalConfig.applyBackgroundAndGrid();
+    }
 
     // Synchronize UI with current mode
     if (this.uiManager) {
       this.uiManager.renderModeControls(this.activeMode);
-      // Sync global playback state
       this.activeMode.setPaused(this.uiManager.isPaused);
       this.activeMode.setTimeScale(this.uiManager.currentSpeed);
     }
@@ -48,4 +53,3 @@ export class ModeRegistry {
     return this.activeMode;
   }
 }
-

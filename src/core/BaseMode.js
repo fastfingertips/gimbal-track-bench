@@ -14,6 +14,7 @@ export class BaseMode {
     this.name = name;
     this.description = description;
     this.canvasManager = null;
+    this.globalConfig = null;
     this.isPaused = false;
     this.timeScale = 1.0;
   }
@@ -21,7 +22,7 @@ export class BaseMode {
   /**
    * Defines UI controls specific to this test mode.
    * Return an array of control specifications:
-   * [{ id, label, type: 'range' | 'select' | 'checkbox', min, max, step, value, unit, onChange }]
+   * [{ id, label, type: 'range' | 'select' | 'checkbox' | 'color', min, max, step, options, value, unit, onChange }]
    * @returns {Array}
    */
   getControls() {
@@ -31,12 +32,18 @@ export class BaseMode {
   /**
    * Lifecycle method: Called when this mode becomes active.
    * @param {CanvasManager} canvasManager
+   * @param {GlobalConfig} globalConfig
    */
-  mount(canvasManager) {
+  mount(canvasManager, globalConfig) {
     this.canvasManager = canvasManager;
+    this.globalConfig = globalConfig;
     this.setupElements();
     this.setupAnimation();
     this.resizeUnsub = this.canvasManager.onResize((dims) => this.onResize(dims));
+
+    if (this.globalConfig) {
+      this.configUnsub = this.globalConfig.onChange((settings) => this.onGlobalConfigChange(settings));
+    }
   }
 
   /**
@@ -51,6 +58,13 @@ export class BaseMode {
    */
   setupAnimation() {
     throw new Error('setupAnimation() must be implemented by subclass');
+  }
+
+  /**
+   * Called when global colors/visuals change.
+   */
+  onGlobalConfigChange(settings) {
+    // Override if needed
   }
 
   /**
@@ -81,6 +95,9 @@ export class BaseMode {
     if (this.resizeUnsub) {
       this.resizeUnsub();
     }
+    if (this.configUnsub) {
+      this.configUnsub();
+    }
     this.cleanupAnimation();
     if (this.canvasManager) {
       this.canvasManager.clearAllLayers();
@@ -94,4 +111,3 @@ export class BaseMode {
     // Override to kill GSAP tweens
   }
 }
-

@@ -1,18 +1,19 @@
 import { Pane } from 'tweakpane';
+import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 
 /**
- * UIManager handles the floating Tweakpane panel in the top-right corner.
- * Features:
- * - Collapsible & movable floating GUI
- * - Global controls: Active Test Mode selector, Play/Pause, Speed scale, Visibility toggle
- * - Dynamic mode parameter folders that update automatically on mode switch
- * - 'H' hotkey to hide/show GUI for unhindered camera view
+ * UIManager handles the rich floating Tweakpane panel with extended camera testing controls:
+ * - Playback & Engine controls (Play/Pause, Speed, FPS monitor)
+ * - Test Mode selection & dynamic mode parameter folders
+ * - Visual & Camera Appearance (Target color, Glow, Obstacle opacity, Crosshair, Calibration grid)
+ * - Keyboard shortcuts ('H' to hide/show, 'Space' to play/pause)
  */
 export class UIManager {
-  constructor({ onPlayPauseToggle, onSpeedChange, onModeChange }) {
+  constructor({ onPlayPauseToggle, onSpeedChange, onModeChange, globalConfig }) {
     this.onPlayPauseToggle = onPlayPauseToggle;
     this.onSpeedChange = onSpeedChange;
     this.onModeChange = onModeChange;
+    this.globalConfig = globalConfig;
 
     this.isPaused = false;
     this.currentSpeed = 1.0;
@@ -22,54 +23,30 @@ export class UIManager {
 
     // Initialize Tweakpane
     this.pane = new Pane({
-      title: 'Tracking Controls',
+      title: '🎥 Gimbal Test Suite',
       expanded: true,
     });
 
+    // Register essentials plugin (for FPS meter)
+    this.pane.registerPlugin(EssentialsPlugin);
+
     this.modeFolder = null;
-    this.setupGlobalControls();
+    this.setupGlobalFolders();
     this.bindKeyboardShortcuts();
   }
 
-  setupGlobalControls() {
-    // 1. Playback folder
-    const globalFolder = this.pane.addFolder({
-      title: 'Global Settings',
+  setupGlobalFolders() {
+    // -------------------------------------------------------------
+    // FOLDER 1: Test Mode Selection & Playback
+    // -------------------------------------------------------------
+    const playbackFolder = this.pane.addFolder({
+      title: 'Control & Playback',
       expanded: true,
-    });
-
-    // Speed Slider
-    globalFolder
-      .addBinding({ speed: this.currentSpeed }, 'speed', {
-        min: 0.2,
-        max: 4.0,
-        step: 0.1,
-        label: 'Speed',
-      })
-      .on('change', (ev) => {
-        this.currentSpeed = ev.value;
-        if (this.onSpeedChange) {
-          this.onSpeedChange(this.currentSpeed);
-        }
-      });
-
-    // Play / Pause Button
-    this.playPauseBtn = globalFolder.addButton({
-      title: '⏸ Pause',
-      label: 'Playback',
-    });
-
-    this.playPauseBtn.on('click', () => {
-      this.isPaused = !this.isPaused;
-      this.playPauseBtn.title = this.isPaused ? '▶ Play' : '⏸ Pause';
-      if (this.onPlayPauseToggle) {
-        this.onPlayPauseToggle(this.isPaused);
-      }
     });
 
     // Test Mode Dropdown binding
     this.modeParams = { mode: '' };
-    this.modeBinding = globalFolder
+    this.modeBinding = playbackFolder
       .addBinding(this.modeParams, 'mode', {
         label: 'Test Mode',
         options: {},
@@ -82,25 +59,154 @@ export class UIManager {
           }
         }
       });
+
+    // Speed Slider
+    playbackFolder
+      .addBinding({ speed: this.currentSpeed }, 'speed', {
+        min: 0.1,
+        max: 5.0,
+        step: 0.1,
+        label: 'Speed Scale',
+      })
+      .on('change', (ev) => {
+        this.currentSpeed = ev.value;
+        if (this.onSpeedChange) {
+          this.onSpeedChange(this.currentSpeed);
+        }
+      });
+
+    // Play / Pause Button
+    this.playPauseBtn = playbackFolder.addButton({
+      title: '⏸ Pause (Space)',
+      label: 'Playback',
+    });
+
+    this.playPauseBtn.on('click', () => {
+      this.togglePlayPause();
+    });
+
+    // FPS / Performance Meter
+    this.fpsGraph = playbackFolder.addBlade({
+      view: 'fpsgraph',
+      label: 'Performance',
+      lineCount: 2,
+    });
+
+    // -------------------------------------------------------------
+    // FOLDER 2: Visual & Camera Calibration
+    // -------------------------------------------------------------
+    const visualFolder = this.pane.addFolder({
+      title: 'Camera & Visuals',
+      expanded: false,
+    });
+
+    if (this.globalConfig) {
+      // Target Color (Color picker)
+      visualFolder
+        .addBinding(this.globalConfig.settings, 'targetColor', {
+          label: 'Target Color',
+          view: 'color',
+        })
+        .on('change', (ev) => {
+          this.globalConfig.set('targetColor', ev.value);
+        });
+
+      // Target Glow Toggle
+      visualFolder
+        .addBinding(this.globalConfig.settings, 'targetGlow', {
+          label: 'Neon Glow',
+        })
+        .on('change', (ev) => {
+          this.globalConfig.set('targetGlow', ev.value);
+        });
+
+      // Glow intensity blur
+      visualFolder
+        .addBinding(this.globalConfig.settings, 'glowBlur', {
+          label: 'Glow Blur',
+          min: 0,
+          max: 40,
+          step: 2,
+        })
+        .on('change', (ev) => {
+          this.globalConfig.set('glowBlur', ev.value);
+        });
+
+      // Obstacle Color
+      visualFolder
+        .addBinding(this.globalConfig.settings, 'obstacleColor', {
+          label: 'Obstacle Color',
+          view: 'color',
+        })
+        .on('change', (ev) => {
+          this.globalConfig.set('obstacleColor', ev.value);
+        });
+
+      // Obstacle Opacity (Transparency for semi-occlusion test)
+      visualFolder
+        .addBinding(this.globalConfig.settings, 'obstacleOpacity', {
+          label: 'Obstacle Alpha',
+          min: 0.1,
+          max: 1.0,
+          step: 0.05,
+        })
+        .on('change', (ev) => {
+          this.globalConfig.set('obstacleOpacity', ev.value);
+        });
+
+      // Background Color
+      visualFolder
+        .addBinding(this.globalConfig.settings, 'backgroundColor', {
+          label: 'Background',
+          view: 'color',
+        })
+        .on('change', (ev) => {
+          this.globalConfig.set('backgroundColor', ev.value);
+        });
+
+      // Calibration Grid & Crosshair
+      visualFolder
+        .addBinding(this.globalConfig.settings, 'showGrid', {
+          label: 'Reference Grid',
+        })
+        .on('change', (ev) => {
+          this.globalConfig.set('showGrid', ev.value);
+        });
+
+      visualFolder
+        .addBinding(this.globalConfig.settings, 'crosshair', {
+          label: 'Center Reticle',
+        })
+        .on('change', (ev) => {
+          this.globalConfig.set('crosshair', ev.value);
+        });
+    }
+  }
+
+  togglePlayPause() {
+    this.isPaused = !this.isPaused;
+    this.playPauseBtn.title = this.isPaused ? '▶ Play (Space)' : '⏸ Pause (Space)';
+    if (this.onPlayPauseToggle) {
+      this.onPlayPauseToggle(this.isPaused);
+    }
   }
 
   populateModeList(modes, selectedId) {
     this.currentModeId = selectedId;
     this.modeParams.mode = selectedId;
 
-    // Convert mode array to Tweakpane options mapping: { 'Display Name': 'id' }
     const options = {};
     modes.forEach((m) => {
       options[m.name] = m.id;
     });
 
-    // Rebind dropdown with populated options
     this.modeBinding.dispose();
-    const globalFolder = this.pane.children[0];
-    this.modeBinding = globalFolder
+    const playbackFolder = this.pane.children[0];
+    this.modeBinding = playbackFolder
       .addBinding(this.modeParams, 'mode', {
         label: 'Test Mode',
         options,
+        index: 0,
       })
       .on('change', (ev) => {
         if (ev.value && ev.value !== this.currentModeId) {
@@ -117,7 +223,6 @@ export class UIManager {
       this.hudModeName.textContent = modeInstance.name;
     }
 
-    // Dispose old mode parameter folder if exists
     if (this.modeFolder) {
       this.modeFolder.dispose();
       this.modeFolder = null;
@@ -127,8 +232,9 @@ export class UIManager {
     if (!controls || controls.length === 0) return;
 
     this.modeFolder = this.pane.addFolder({
-      title: `${modeInstance.name} Params`,
+      title: `⚙️ ${modeInstance.name} Params`,
       expanded: true,
+      index: 1, // Place right below Control & Playback
     });
 
     controls.forEach((ctrl) => {
@@ -140,6 +246,16 @@ export class UIManager {
             min: ctrl.min,
             max: ctrl.max,
             step: ctrl.step || 1,
+          })
+          .on('change', (ev) => {
+            ctrl.onChange(ev.value);
+          });
+      } else if (ctrl.type === 'select') {
+        const state = { [ctrl.id]: ctrl.value };
+        this.modeFolder
+          .addBinding(state, ctrl.id, {
+            label: ctrl.label,
+            options: ctrl.options,
           })
           .on('change', (ev) => {
             ctrl.onChange(ev.value);
@@ -158,14 +274,33 @@ export class UIManager {
   }
 
   bindKeyboardShortcuts() {
-    // Press 'H' to toggle GUI visibility for completely clean camera tracking testing
     window.addEventListener('keydown', (e) => {
+      // Toggle GUI with 'H'
       if (e.key === 'h' || e.key === 'H') {
         const el = this.pane.element;
         if (el) {
           el.style.display = el.style.display === 'none' ? '' : 'none';
         }
       }
+      // Toggle Play/Pause with 'Space'
+      if (e.code === 'Space') {
+        e.preventDefault();
+        this.togglePlayPause();
+      }
     });
+
+    // Start FPS graph ticker
+    const tick = () => {
+      if (this.fpsGraph && this.fpsGraph.begin) {
+        this.fpsGraph.begin();
+      }
+      requestAnimationFrame(() => {
+        if (this.fpsGraph && this.fpsGraph.end) {
+          this.fpsGraph.end();
+        }
+        requestAnimationFrame(tick);
+      });
+    };
+    requestAnimationFrame(tick);
   }
 }

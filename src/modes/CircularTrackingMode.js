@@ -2,11 +2,6 @@ import Konva from 'konva';
 import gsap from 'gsap';
 import { BaseMode } from '../core/BaseMode.js';
 
-/**
- * CircularTrackingMode
- * Tests continuous angular pan/tilt velocity and acceleration limits
- * by rotating the target in an elliptical or circular orbit.
- */
 export class CircularTrackingMode extends BaseMode {
   constructor() {
     super({
@@ -16,7 +11,9 @@ export class CircularTrackingMode extends BaseMode {
     });
 
     this.radius = 35;
-    this.orbitRadiusRatio = 0.35; // % of canvas min dimension
+    this.orbitRadiusRatio = 0.35;
+    this.orbitEccentricity = 1.0; // 1.0 = circle, >1.0 = oval/ellipse
+    this.direction = 1; // 1 = clockwise, -1 = counter-clockwise
     this.showTrail = true;
     this.baseDuration = 5;
     this.orbitAngle = { angle: 0 };
@@ -26,28 +23,67 @@ export class CircularTrackingMode extends BaseMode {
   getControls() {
     return [
       {
-        id: 'orbit-size',
+        id: 'orbitRadius',
         label: 'Orbit Radius',
         type: 'range',
-        min: 15,
+        min: 10,
         max: 48,
         step: 1,
         value: Math.round(this.orbitRadiusRatio * 100),
-        unit: '%',
         onChange: (val) => {
-          this.orbitRadiusRatio = parseFloat(val) / 100;
+          this.orbitRadiusRatio = val / 100;
           this.updateOrbitGuide();
         },
       },
       {
-        id: 'show-orbit-guide',
-        label: 'Orbit Guide',
+        id: 'eccentricity',
+        label: 'Aspect (X:Y)',
+        type: 'range',
+        min: 0.4,
+        max: 2.2,
+        step: 0.1,
+        value: this.orbitEccentricity,
+        onChange: (val) => {
+          this.orbitEccentricity = val;
+          this.updateOrbitGuide();
+        },
+      },
+      {
+        id: 'direction',
+        label: 'Direction',
+        type: 'select',
+        options: { 'Clockwise (CW)': 1, 'Counter-Clockwise (CCW)': -1 },
+        value: this.direction,
+        onChange: (val) => {
+          this.direction = parseInt(val, 10);
+          this.setupAnimation();
+        },
+      },
+      {
+        id: 'targetSize',
+        label: 'Target Size',
+        type: 'range',
+        min: 10,
+        max: 80,
+        step: 2,
+        value: this.radius,
+        onChange: (val) => {
+          this.radius = val;
+          if (this.target) {
+            this.target.radius(this.radius);
+            this.targetLayer.batchDraw();
+          }
+        },
+      },
+      {
+        id: 'showGuide',
+        label: 'Show Path Guide',
         type: 'checkbox',
         value: this.showTrail,
         onChange: (val) => {
           this.showTrail = val;
-          if (this.guideCircle) {
-            this.guideCircle.visible(val);
+          if (this.guideEllipse) {
+            this.guideEllipse.visible(val);
             this.guideLayer.batchDraw();
           }
         },
@@ -60,31 +96,36 @@ export class CircularTrackingMode extends BaseMode {
     const centerX = width / 2;
     const centerY = height / 2;
     const minDim = Math.min(width, height);
-    const orbitR = minDim * this.orbitRadiusRatio;
+    const radiusY = minDim * this.orbitRadiusRatio;
+    const radiusX = radiusY * this.orbitEccentricity;
 
     this.guideLayer = this.canvasManager.getLayer('guide-layer');
     this.targetLayer = this.canvasManager.getLayer('target-layer');
 
-    // Dashed guide circle
-    this.guideCircle = new Konva.Circle({
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#00ff66';
+    const targetGlow = this.globalConfig ? this.globalConfig.get('targetGlow') : true;
+
+    // Guide Ellipse
+    this.guideEllipse = new Konva.Ellipse({
       x: centerX,
       y: centerY,
-      radius: orbitR,
-      stroke: '#333333',
+      radiusX,
+      radiusY,
+      stroke: '#333338',
       strokeWidth: 2,
-      dash: [8, 8],
+      dash: [6, 6],
       visible: this.showTrail,
     });
-    this.guideLayer.add(this.guideCircle);
+    this.guideLayer.add(this.guideEllipse);
 
-    // Neon Target
+    // Target
     this.target = new Konva.Circle({
-      x: centerX + orbitR,
+      x: centerX + radiusX,
       y: centerY,
       radius: this.radius,
-      fill: '#00ff66',
-      shadowColor: '#00ff66',
-      shadowBlur: 16,
+      fill: targetColor,
+      shadowColor: targetColor,
+      shadowBlur: targetGlow ? 16 : 0,
       shadowOpacity: 0.85,
     });
     this.targetLayer.add(this.target);
@@ -98,11 +139,13 @@ export class CircularTrackingMode extends BaseMode {
     const centerX = width / 2;
     const centerY = height / 2;
     const minDim = Math.min(width, height);
-    const orbitR = minDim * this.orbitRadiusRatio;
+    const radiusY = minDim * this.orbitRadiusRatio;
+    const radiusX = radiusY * this.orbitEccentricity;
 
-    if (this.guideCircle) {
-      this.guideCircle.position({ x: centerX, y: centerY });
-      this.guideCircle.radius(orbitR);
+    if (this.guideEllipse) {
+      this.guideEllipse.position({ x: centerX, y: centerY });
+      this.guideEllipse.radiusX(radiusX);
+      this.guideEllipse.radiusY(radiusY);
       this.guideLayer.batchDraw();
     }
   }
@@ -115,7 +158,7 @@ export class CircularTrackingMode extends BaseMode {
     this.orbitAngle.angle = 0;
 
     this.tween = gsap.to(this.orbitAngle, {
-      angle: Math.PI * 2,
+      angle: Math.PI * 2 * this.direction,
       duration: this.baseDuration,
       ease: 'none',
       repeat: -1,
@@ -124,10 +167,11 @@ export class CircularTrackingMode extends BaseMode {
         const centerX = width / 2;
         const centerY = height / 2;
         const minDim = Math.min(width, height);
-        const orbitR = minDim * this.orbitRadiusRatio;
+        const radiusY = minDim * this.orbitRadiusRatio;
+        const radiusX = radiusY * this.orbitEccentricity;
 
-        const x = centerX + Math.cos(this.orbitAngle.angle) * orbitR;
-        const y = centerY + Math.sin(this.orbitAngle.angle) * orbitR;
+        const x = centerX + Math.cos(this.orbitAngle.angle) * radiusX;
+        const y = centerY + Math.sin(this.orbitAngle.angle) * radiusY;
 
         this.target.position({ x, y });
         this.targetLayer.batchDraw();
@@ -140,21 +184,25 @@ export class CircularTrackingMode extends BaseMode {
     }
   }
 
+  onGlobalConfigChange(settings) {
+    if (this.target) {
+      this.target.fill(settings.targetColor);
+      this.target.shadowColor(settings.targetColor);
+      this.target.shadowBlur(settings.targetGlow ? settings.glowBlur : 0);
+      this.targetLayer.batchDraw();
+    }
+  }
+
   setPaused(paused) {
     super.setPaused(paused);
     if (!this.tween) return;
-    if (paused) {
-      this.tween.pause();
-    } else {
-      this.tween.play();
-    }
+    if (paused) this.tween.pause();
+    else this.tween.play();
   }
 
   setTimeScale(scale) {
     super.setTimeScale(scale);
-    if (this.tween) {
-      this.tween.timeScale(scale);
-    }
+    if (this.tween) this.tween.timeScale(scale);
   }
 
   onResize() {
@@ -168,4 +216,3 @@ export class CircularTrackingMode extends BaseMode {
     }
   }
 }
-

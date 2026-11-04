@@ -2,11 +2,6 @@ import Konva from 'konva';
 import gsap from 'gsap';
 import { BaseMode } from '../core/BaseMode.js';
 
-/**
- * LinearOcclusionMode
- * Tests PTZ/Gimbal tracking recovery during complete visual occlusion
- * with a center obstacle and linear back-and-forth movement.
- */
 export class LinearOcclusionMode extends BaseMode {
   constructor() {
     super({
@@ -17,75 +12,160 @@ export class LinearOcclusionMode extends BaseMode {
 
     this.radius = 40;
     this.obstacleWidth = 300;
+    this.obstacleCount = 1; // 1 or 2 pillars
     this.baseDuration = 4;
+    this.easeType = 'none'; // 'none' | 'power2.inOut' | 'sine.inOut'
+    this.verticalOffset = 0; // vertical drift
     this.tween = null;
   }
 
   getControls() {
     return [
       {
-        id: 'obstacle-width',
+        id: 'obstacleWidth',
         label: 'Obstacle Width',
         type: 'range',
-        min: 50,
+        min: 20,
         max: 800,
         step: 10,
         value: this.obstacleWidth,
-        unit: 'px',
         onChange: (val) => {
-          this.obstacleWidth = parseFloat(val);
-          this.updateObstacle();
+          this.obstacleWidth = val;
+          this.updateObstacles();
         },
       },
       {
-        id: 'target-radius',
+        id: 'obstacleCount',
+        label: 'Pillar Count',
+        type: 'select',
+        options: { 'Single Pillar (Center)': 1, 'Dual Pillars': 2 },
+        value: this.obstacleCount,
+        onChange: (val) => {
+          this.obstacleCount = parseInt(val, 10);
+          this.rebuildObstacles();
+        },
+      },
+      {
+        id: 'targetRadius',
         label: 'Target Size',
         type: 'range',
-        min: 15,
-        max: 80,
-        step: 5,
+        min: 10,
+        max: 100,
+        step: 2,
         value: this.radius,
-        unit: 'px',
         onChange: (val) => {
-          this.radius = parseFloat(val);
-          this.target.radius(this.radius);
-          this.targetLayer.batchDraw();
+          this.radius = val;
+          if (this.target) {
+            this.target.radius(this.radius);
+            this.targetLayer.batchDraw();
+          }
           this.setupAnimation();
+        },
+      },
+      {
+        id: 'easeType',
+        label: 'Motion Curve',
+        type: 'select',
+        options: { 'Linear (Constant)': 'none', 'Ease In-Out': 'power2.inOut', 'Sine Wave': 'sine.inOut' },
+        value: this.easeType,
+        onChange: (val) => {
+          this.easeType = val;
+          this.setupAnimation();
+        },
+      },
+      {
+        id: 'verticalOffset',
+        label: 'V-Drift (Y)',
+        type: 'range',
+        min: -150,
+        max: 150,
+        step: 10,
+        value: this.verticalOffset,
+        onChange: (val) => {
+          this.verticalOffset = val;
+          const { height } = this.canvasManager.getDimensions();
+          if (this.target) {
+            this.target.y(height / 2 + this.verticalOffset);
+            this.targetLayer.batchDraw();
+          }
         },
       },
     ];
   }
 
   setupElements() {
-    const { width, height } = this.canvasManager.getDimensions();
+    const { height } = this.canvasManager.getDimensions();
 
     this.targetLayer = this.canvasManager.getLayer('target-layer');
     this.obstacleLayer = this.canvasManager.getLayer('obstacle-layer');
 
-    // 1. Neon Green Target Circle
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#00ff66';
+    const targetGlow = this.globalConfig ? this.globalConfig.get('targetGlow') : true;
+
+    // Target circle
     this.target = new Konva.Circle({
       x: this.radius,
-      y: height / 2,
+      y: height / 2 + this.verticalOffset,
       radius: this.radius,
-      fill: '#00ff66',
-      shadowColor: '#00ff66',
-      shadowBlur: 16,
+      fill: targetColor,
+      shadowColor: targetColor,
+      shadowBlur: targetGlow ? 16 : 0,
       shadowOpacity: 0.85,
     });
     this.targetLayer.add(this.target);
 
-    // 2. Center Black Obstacle
-    this.obstacle = new Konva.Rect({
-      x: (width - this.obstacleWidth) / 2,
-      y: 0,
-      width: this.obstacleWidth,
-      height: height,
-      fill: '#000000',
-    });
-    this.obstacleLayer.add(this.obstacle);
-
+    this.rebuildObstacles();
     this.targetLayer.batchDraw();
+  }
+
+  rebuildObstacles() {
+    this.obstacleLayer.destroyChildren();
+    const { width, height } = this.canvasManager.getDimensions();
+    const obsColor = this.globalConfig ? this.globalConfig.get('obstacleColor') : '#000000';
+    const obsOpacity = this.globalConfig ? this.globalConfig.get('obstacleOpacity') : 1.0;
+
+    this.obstacles = [];
+
+    if (this.obstacleCount === 1) {
+      const rect = new Konva.Rect({
+        x: (width - this.obstacleWidth) / 2,
+        y: 0,
+        width: this.obstacleWidth,
+        height: height,
+        fill: obsColor,
+        opacity: obsOpacity,
+      });
+      this.obstacleLayer.add(rect);
+      this.obstacles.push(rect);
+    } else {
+      // 2 Pillars placed at 33% and 66% width
+      const spacing = width / 3;
+      const r1 = new Konva.Rect({
+        x: spacing - this.obstacleWidth / 2,
+        y: 0,
+        width: this.obstacleWidth,
+        height: height,
+        fill: obsColor,
+        opacity: obsOpacity,
+      });
+      const r2 = new Konva.Rect({
+        x: spacing * 2 - this.obstacleWidth / 2,
+        y: 0,
+        width: this.obstacleWidth,
+        height: height,
+        fill: obsColor,
+        opacity: obsOpacity,
+      });
+      this.obstacleLayer.add(r1);
+      this.obstacleLayer.add(r2);
+      this.obstacles.push(r1, r2);
+    }
+
     this.obstacleLayer.batchDraw();
+  }
+
+  updateObstacles() {
+    this.rebuildObstacles();
   }
 
   setupAnimation() {
@@ -103,7 +183,7 @@ export class LinearOcclusionMode extends BaseMode {
     this.tween = gsap.to(this.target, {
       x: endX,
       duration: this.baseDuration,
-      ease: 'none',
+      ease: this.easeType,
       repeat: -1,
       yoyo: true,
       onUpdate: () => {
@@ -117,38 +197,40 @@ export class LinearOcclusionMode extends BaseMode {
     }
   }
 
-  updateObstacle() {
-    if (!this.obstacle) return;
-    const { width, height } = this.canvasManager.getDimensions();
-    this.obstacle.width(this.obstacleWidth);
-    this.obstacle.x((width - this.obstacleWidth) / 2);
-    this.obstacle.height(height);
-    this.obstacleLayer.batchDraw();
+  onGlobalConfigChange(settings) {
+    if (this.target) {
+      this.target.fill(settings.targetColor);
+      this.target.shadowColor(settings.targetColor);
+      this.target.shadowBlur(settings.targetGlow ? settings.glowBlur : 0);
+      this.targetLayer.batchDraw();
+    }
+    if (this.obstacles) {
+      this.obstacles.forEach((obs) => {
+        obs.fill(settings.obstacleColor);
+        obs.opacity(settings.obstacleOpacity);
+      });
+      this.obstacleLayer.batchDraw();
+    }
   }
 
   setPaused(paused) {
     super.setPaused(paused);
     if (!this.tween) return;
-    if (paused) {
-      this.tween.pause();
-    } else {
-      this.tween.play();
-    }
+    if (paused) this.tween.pause();
+    else this.tween.play();
   }
 
   setTimeScale(scale) {
     super.setTimeScale(scale);
-    if (this.tween) {
-      this.tween.timeScale(scale);
-    }
+    if (this.tween) this.tween.timeScale(scale);
   }
 
   onResize() {
     const { height } = this.canvasManager.getDimensions();
     if (this.target) {
-      this.target.y(height / 2);
+      this.target.y(height / 2 + this.verticalOffset);
     }
-    this.updateObstacle();
+    this.updateObstacles();
     this.setupAnimation();
   }
 
@@ -159,4 +241,3 @@ export class LinearOcclusionMode extends BaseMode {
     }
   }
 }
-
