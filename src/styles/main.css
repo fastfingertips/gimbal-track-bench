@@ -1,4 +1,8 @@
 :root {
+  /* VS Code Native Font Stacks */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
+  --font-code: "Cascadia Code", "Fira Code", Consolas, Menlo, Monaco, "Courier New", monospace;
+
   /* VS Code Dark+ / Modern Matte Theme Palette */
   --bg-primary: #1e1e1e;          /* VS Code Editor BG */
   --bg-secondary: #252526;        /* VS Code Sidebar BG */
@@ -23,7 +27,12 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-ui);
+  font-size: 13px; /* VS Code default UI font size */
+  line-height: 1.4;
+  letter-spacing: 0.15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-primary);
   color: var(--text-main);
   user-select: none;
@@ -46,9 +55,9 @@ body {
   position: fixed;
   top: 16px;
   right: 18px;
-  width: 38px;
-  height: 38px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   color: var(--text-muted);
@@ -57,7 +66,7 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease-in-out;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
@@ -75,6 +84,7 @@ body {
 }
 
 /* Bottom-Right GitHub Badge:
+   - Cascadia Code / Consolas VS Code typography
    - Icon is fixed at the far right
    - Text expands to the LEFT of the icon
    - No border
@@ -82,52 +92,53 @@ body {
 */
 .ghost-github-badge {
   position: fixed;
-  bottom: 16px;
-  right: 18px;
+  bottom: 14px;
+  right: 16px;
   z-index: 50;
   display: inline-flex;
-  flex-direction: row; /* Text is on the left, icon on the right */
+  flex-direction: row;
   align-items: center;
   background: transparent;
   color: var(--text-muted);
   opacity: 0.35;
   padding: 6px 4px;
-  border: none !important; /* No border */
+  border: none !important;
   outline: none;
   text-decoration: none;
   cursor: pointer;
-  transition: opacity 0.25s ease, color 0.25s ease;
+  transition: opacity 0.2s ease, color 0.2s ease;
 }
 
 .ghost-github-badge .github-icon {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   color: currentColor;
-  transition: transform 0.25s ease, color 0.25s ease;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .ghost-github-badge .repo-text {
-  font-family: Consolas, "Courier New", monospace;
-  font-size: 0.78rem;
+  font-family: var(--font-code);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: -0.2px;
   max-width: 0;
   overflow: hidden;
   white-space: nowrap;
   opacity: 0;
   margin-right: 0px;
-  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease;
+  transition: max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin-right 0.25s ease;
 }
 
-/* On hover: text slides out to the LEFT of the fixed icon */
 .ghost-github-badge:hover {
   opacity: 1;
   color: var(--vscode-blue-hover);
 }
 
 .ghost-github-badge:hover .repo-text {
-  max-width: 220px;
+  max-width: 240px;
   opacity: 1;
-  margin-right: 8px; /* space between text and icon */
+  margin-right: 8px;
 }
 
 .ghost-github-badge:hover .github-icon {
@@ -135,17 +146,49 @@ body {
   transform: scale(1.08);
 }
 
-/* Tweakpane Floating GUI Customizations - VS Code Matte Palette */
+/* Tweakpane Floating GUI Customizations - VS Code Typography & Spacing */
 .tp-dfwv {
   position: fixed !important;
-  top: 62px !important;
+  top: 58px !important;
   right: 18px !important;
   width: 320px !important;
   z-index: 9999 !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-  border-radius: 6px !important;
+  border-radius: 4px !important;
   overflow: hidden !important;
   border: 1px solid var(--border-subtle) !important;
+  font-family: var(--font-ui) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* Tweakpane folder titles, labels, inputs */
+.tp-fldv_t {
+  font-family: var(--font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  color: #bbbbbb !important;
+}
+
+.tp-lblv_l {
+  font-family: var(--font-ui) !important;
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+.tp-txtv_i,
+.tp-lstv_s,
+.tp-btnv_b {
+  font-family: var(--font-ui) !important;
+  font-size: 12px !important;
+}
+
+/* Monospace numeric values in slider badges */
+.tp-sldv_t {
+  font-family: var(--font-code) !important;
+  font-size: 11px !important;
 }
 
 /* Completely remove border/box-shadow/outline when hidden to prevent residual line */
