@@ -72,9 +72,9 @@ export class UIManager {
 
     this.cursorTooltip = document.getElementById('cursorTooltip');
 
+    // Root pane with NO collapse button or title bar (100% flat panel controlled solely by our toggle icon)
     this.pane = new Pane({
       container: this.guiContainer as HTMLElement,
-      title: 'Controls & Tuning',
       expanded: true,
     });
 
@@ -211,7 +211,6 @@ export class UIManager {
     if (!canvasContainer || !this.cursorTooltip) return;
 
     window.addEventListener('mousemove', (e: MouseEvent) => {
-      // Don't show tooltip if inspector or menu is open, or during idle auto-hide
       if (
         this.isUserIdle ||
         (this.canvasInspector && !this.canvasInspector.classList.contains('hidden')) ||
@@ -221,7 +220,6 @@ export class UIManager {
         return;
       }
 
-      // Check if mouse is directly over any shape on the Konva stage
       const stage = (this.activeModeRef as any)?.canvasManager?.stage;
       if (!stage) {
         this.hideCursorTooltip();
@@ -243,11 +241,8 @@ export class UIManager {
   }
 
   private identifyEntityFromShape(shape: any): { name: string; tag: string; color: string } | null {
-    const parentName = shape.parent?.name() || '';
-    const shapeName = shape.name() || '';
     const layerName = shape.getLayer()?.name() || '';
 
-    // Check Linear Occlusion
     if (this.currentModeId === 'linear-occlusion') {
       if (shape.className === 'Circle' || layerName === 'target-layer') {
         return { name: 'Tracking Target', tag: 'Neon Circle', color: shape.fill() || '#007acc' };
@@ -257,7 +252,6 @@ export class UIManager {
       }
     }
 
-    // Check Crossing Paths
     if (this.currentModeId === 'distractor-swapping') {
       const groupText = shape.parent?.findOne('Text')?.text();
       if (groupText === 'A' || shape.getLayer()?.name() === 'primary-target-layer') {
@@ -268,14 +262,12 @@ export class UIManager {
       }
     }
 
-    // Check Depth & Auto-Zoom
     if (this.currentModeId === 'depth-zoom') {
       if (shape.className === 'Circle') {
         return { name: 'Perspective Target', tag: 'Auto-Zoom Scale', color: shape.fill() || '#007acc' };
       }
     }
 
-    // Check Circular Orbit
     if (this.currentModeId === 'circular-tracking') {
       if (shape.className === 'Circle') {
         return { name: 'Orbiting Target', tag: 'Pan/Tilt Velocity', color: shape.fill() || '#007acc' };
@@ -285,7 +277,6 @@ export class UIManager {
       }
     }
 
-    // Check Step Jump
     if (this.currentModeId === 'step-jump') {
       if (shape.className === 'Circle' && shape.radius() > 20) {
         return { name: 'Saccade Target', tag: 'Step Response', color: shape.fill() || '#007acc' };
@@ -295,7 +286,6 @@ export class UIManager {
       }
     }
 
-    // Generic fallback for any other interactable Konva shape
     if (shape.className === 'Circle') {
       return { name: 'Target Element', tag: 'Active', color: shape.fill() || '#007acc' };
     }

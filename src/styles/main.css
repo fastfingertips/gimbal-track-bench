@@ -574,6 +574,11 @@ body.user-idle .cursor-tooltip {
   letter-spacing: normal !important;
 }
 
+/* Completely hide root title/collapse bar if generated */
+.tp-rotv_t {
+  display: none !important;
+}
+
 .tp-fldv_t .tp-fldv_a {
   display: none !important;
 }
