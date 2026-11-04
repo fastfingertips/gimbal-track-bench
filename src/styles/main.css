@@ -75,6 +75,14 @@ body.user-idle .cursor-tooltip {
 }
 
 /* ========================================================
+   MANUAL CONTROL MODE: IMMERSIVE CURSOR HIDING
+   ======================================================== */
+body.manual-control-active:not(.is-paused) #canvas-container,
+body.manual-control-active:not(.is-paused) #canvas-container * {
+  cursor: none !important;
+}
+
+/* ========================================================
    DYNAMIC CURSOR HOVER TOOLTIP / BADGE
    ======================================================== */
 .cursor-tooltip {

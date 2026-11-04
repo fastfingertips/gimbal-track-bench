@@ -9,6 +9,7 @@ import { CircularTrackingMode } from './modes/CircularTrackingMode';
 import { StepJumpMode } from './modes/StepJumpMode';
 import { DistractorSwappingMode } from './modes/DistractorSwappingMode';
 import { DepthZoomMode } from './modes/DepthZoomMode';
+import { ManualControlMode } from './modes/ManualControlMode';
 
 class App {
   private canvasManager: CanvasManager;
@@ -43,6 +44,7 @@ class App {
     this.modeRegistry.register(new DepthZoomMode());
     this.modeRegistry.register(new CircularTrackingMode());
     this.modeRegistry.register(new StepJumpMode());
+    this.modeRegistry.register(new ManualControlMode());
 
     const allModes = this.modeRegistry.getAllModes();
     const initialModeId = allModes[0].id;
