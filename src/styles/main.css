@@ -1,24 +1,21 @@
 :root {
-  /* Official VS Code Font Stacks */
   --font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-code: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
 
-  /* Authentic VS Code Font Weights */
   --fw-normal: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
 
-  /* VS Code Dark+ / Modern Matte Theme Palette */
-  --bg-primary: #1e1e1e;          /* VS Code Editor BG */
-  --bg-secondary: #252526;        /* VS Code Sidebar BG */
-  --bg-tertiary: #2d2d30;         /* VS Code Activity Bar */
-  --vscode-blue: #007acc;         /* Signature VS Code Blue */
-  --vscode-blue-hover: #1f8ad2;   /* Hover Blue */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d30;
+  --vscode-blue: #007acc;
+  --vscode-blue-hover: #1f8ad2;
   --vscode-blue-muted: rgba(0, 122, 204, 0.18);
-  --border-subtle: #3e3e42;       /* Subtle dark border */
-  --text-main: #cccccc;           /* VS Code Main Text */
-  --text-muted: #858585;          /* VS Code Muted Text */
-  --text-heading: #e0e0e0;        /* VS Code Section Header Text */
+  --border-subtle: #3e3e42;
+  --text-main: #cccccc;
+  --text-muted: #858585;
+  --text-heading: #e0e0e0;
 }
 
 * {
@@ -151,9 +148,7 @@ body.manual-control-active .cursor-tooltip {
   border-radius: 2px;
 }
 
-/* ========================================================
-   1. TOP-LEFT: MODERN SOFT DROPDOWN MENU FOR MODES
-   ======================================================== */
+/* Mode Menu */
 .mode-menu-wrapper {
   position: fixed;
   top: 16px;
@@ -277,9 +272,7 @@ body.manual-control-active .cursor-tooltip {
   opacity: 1;
 }
 
-/* ========================================================
-   2. TOP-CENTER: MINIMAL TEXT WITH SLEEK UNDERLINE
-   ======================================================== */
+/* Active Mode Indicator */
 .active-mode-display {
   position: fixed;
   top: 18px;
