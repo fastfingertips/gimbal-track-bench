@@ -18,7 +18,7 @@
   "dependencies": {
     "@tweakpane/plugin-essentials": "^0.2.1",
     "gsap": "^3.12.5",
-    "konva": "^9.3.16",
+    "konva": "^10.9.1",
     "tweakpane": "^4.0.5"
   },
   "devDependencies": {
