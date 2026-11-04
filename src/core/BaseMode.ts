@@ -46,6 +46,55 @@ export abstract class BaseMode {
   }
 
   /**
+   * Retrieves all current mode parameters as a key-value record for URL serialization.
+   */
+  public getSettings(): Record<string, any> {
+    const controls = this.getControls();
+    const result: Record<string, any> = {};
+    controls.forEach((ctrl) => {
+      result[ctrl.id] = ctrl.value;
+    });
+    return result;
+  }
+
+  /**
+   * Applies serialized URL parameter values to this mode's controls.
+   */
+  public applySettings(settings: Record<string, any>): void {
+    const controls = this.getControls();
+    controls.forEach((ctrl) => {
+      if (settings[ctrl.id] !== undefined) {
+        const rawVal = settings[ctrl.id];
+        if (ctrl.type === 'range') {
+          const num = Number(rawVal);
+          if (!isNaN(num)) {
+            ctrl.value = num;
+            ctrl.onChange(num);
+          }
+        } else if (ctrl.type === 'checkbox') {
+          const bool = rawVal === 'true' || rawVal === true || rawVal === '1';
+          ctrl.value = bool;
+          ctrl.onChange(bool);
+        } else {
+          if (typeof ctrl.value === 'number') {
+            const num = Number(rawVal);
+            if (!isNaN(num)) {
+              ctrl.value = num;
+              ctrl.onChange(num);
+            } else {
+              ctrl.value = rawVal;
+              ctrl.onChange(rawVal);
+            }
+          } else {
+            ctrl.value = String(rawVal);
+            ctrl.onChange(String(rawVal));
+          }
+        }
+      }
+    });
+  }
+
+  /**
    * Returns a complete list of every interactive entity currently in the canvas scene:
    * Target(s), Obstacle(s), Guides/Waypoints, Grid & Environment.
    */

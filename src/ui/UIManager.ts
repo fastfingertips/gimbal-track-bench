@@ -8,6 +8,7 @@ export interface UIManagerOptions {
   onPlayPauseToggle: (isPaused: boolean) => void;
   onSpeedChange: (speed: number) => void;
   onModeChange: (modeId: string) => void;
+  onSettingsChange?: () => void;
   globalConfig: GlobalConfig;
 }
 
@@ -15,6 +16,7 @@ export class UIManager {
   private onPlayPauseToggle: (isPaused: boolean) => void;
   private onSpeedChange: (speed: number) => void;
   private onModeChange: (modeId: string) => void;
+  private onSettingsChange?: () => void;
   private globalConfig: GlobalConfig;
 
   public isPaused: boolean = false;
@@ -55,6 +57,7 @@ export class UIManager {
     this.onPlayPauseToggle = options.onPlayPauseToggle;
     this.onSpeedChange = options.onSpeedChange;
     this.onModeChange = options.onModeChange;
+    this.onSettingsChange = options.onSettingsChange;
     this.globalConfig = options.globalConfig;
 
     this.modeMenuWrapper = document.getElementById('modeMenuWrapper');
@@ -105,6 +108,7 @@ export class UIManager {
         if (this.onSpeedChange) {
           this.onSpeedChange(this.currentSpeed);
         }
+        this.notifySettingsChanged();
       });
 
     this.playPauseBtn = playbackFolder.addButton({
@@ -114,6 +118,27 @@ export class UIManager {
 
     this.playPauseBtn.on('click', () => {
       this.togglePlayPause();
+    });
+
+    const shareBtn = playbackFolder.addButton({
+      title: '📋 Copy Share Link',
+      label: 'Share Setup',
+    });
+
+    shareBtn.on('click', () => {
+      this.notifySettingsChanged();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          shareBtn.title = '✓ Link Copied!';
+          setTimeout(() => {
+            shareBtn.title = '📋 Copy Share Link';
+          }, 2000);
+        }).catch(() => {
+          prompt('Copy this URL to share your test setup:', window.location.href);
+        });
+      } else {
+        prompt('Copy this URL to share your test setup:', window.location.href);
+      }
     });
 
     this.fpsGraph = playbackFolder.addBlade({
@@ -135,6 +160,7 @@ export class UIManager {
         })
         .on('change', (ev: { value: string }) => {
           this.globalConfig.set('targetColor', ev.value);
+          this.notifySettingsChanged();
         });
 
       visualFolder
@@ -143,6 +169,7 @@ export class UIManager {
         })
         .on('change', (ev: { value: boolean }) => {
           this.globalConfig.set('targetGlow', ev.value);
+          this.notifySettingsChanged();
         });
 
       visualFolder
@@ -154,6 +181,7 @@ export class UIManager {
         })
         .on('change', (ev: { value: number }) => {
           this.globalConfig.set('glowBlur', ev.value);
+          this.notifySettingsChanged();
         });
 
       visualFolder
@@ -163,6 +191,7 @@ export class UIManager {
         })
         .on('change', (ev: { value: string }) => {
           this.globalConfig.set('obstacleColor', ev.value);
+          this.notifySettingsChanged();
         });
 
       visualFolder
@@ -174,6 +203,7 @@ export class UIManager {
         })
         .on('change', (ev: { value: number }) => {
           this.globalConfig.set('obstacleOpacity', ev.value);
+          this.notifySettingsChanged();
         });
 
       visualFolder
@@ -477,6 +507,7 @@ export class UIManager {
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
             this.pane.refresh();
+            this.notifySettingsChanged();
           });
       } else if (ctrl.type === 'select') {
         const state = { [ctrl.id]: ctrl.value };
@@ -488,6 +519,7 @@ export class UIManager {
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
             this.pane.refresh();
+            this.notifySettingsChanged();
           });
       } else if (ctrl.type === 'checkbox') {
         const state = { [ctrl.id]: !!ctrl.value };
@@ -498,6 +530,7 @@ export class UIManager {
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
             this.pane.refresh();
+            this.notifySettingsChanged();
           });
       }
     });
@@ -666,6 +699,7 @@ export class UIManager {
             valSpan.textContent = String(v);
             prop.onChange(v);
             this.pane.refresh();
+            this.notifySettingsChanged();
           });
 
           item.appendChild(input);
@@ -680,6 +714,7 @@ export class UIManager {
             dot.style.backgroundColor = val;
             prop.onChange(val);
             this.pane.refresh();
+            this.notifySettingsChanged();
           });
 
           labelRow.appendChild(colorInput);
@@ -693,6 +728,7 @@ export class UIManager {
           checkbox.addEventListener('change', (ev) => {
             prop.onChange((ev.target as HTMLInputElement).checked);
             this.pane.refresh();
+            this.notifySettingsChanged();
           });
 
           labelRow.appendChild(checkbox);
@@ -785,6 +821,22 @@ export class UIManager {
     this.playPauseBtn.title = this.isPaused ? '▶ Play (Space)' : '⏸ Pause (Space)';
     if (this.onPlayPauseToggle) {
       this.onPlayPauseToggle(this.isPaused);
+    }
+  }
+
+  public notifySettingsChanged(): void {
+    if (this.onSettingsChange) {
+      this.onSettingsChange();
+    }
+  }
+
+  public setSpeed(speed: number): void {
+    this.currentSpeed = speed;
+    if (this.onSpeedChange) {
+      this.onSpeedChange(speed);
+    }
+    if (this.pane) {
+      this.pane.refresh();
     }
   }
 

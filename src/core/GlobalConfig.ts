@@ -57,6 +57,32 @@ export class GlobalConfig {
     this.notify();
   }
 
+  public applyFromUrlParams(params: URLSearchParams): void {
+    const patch: Partial<GlobalSettings> = {};
+    if (params.has('targetColor')) patch.targetColor = params.get('targetColor')!;
+    if (params.has('targetGlow')) patch.targetGlow = params.get('targetGlow') === 'true';
+    if (params.has('glowBlur')) {
+      const v = Number(params.get('glowBlur'));
+      if (!isNaN(v)) patch.glowBlur = v;
+    }
+    if (params.has('obstacleColor')) patch.obstacleColor = params.get('obstacleColor')!;
+    if (params.has('obstacleOpacity')) {
+      const v = Number(params.get('obstacleOpacity'));
+      if (!isNaN(v)) patch.obstacleOpacity = v;
+    }
+    if (params.has('backgroundColor')) patch.backgroundColor = params.get('backgroundColor')!;
+    if (params.has('showGrid')) patch.showGrid = params.get('showGrid') === 'true';
+    if (params.has('gridColor')) patch.gridColor = params.get('gridColor')!;
+    if (params.has('gridSpacing')) {
+      const v = Number(params.get('gridSpacing'));
+      if (!isNaN(v)) patch.gridSpacing = v;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      this.update(patch);
+    }
+  }
+
   public onChange(callback: GlobalConfigChangeListener): () => void {
     this.changeListeners.add(callback);
     return () => this.changeListeners.delete(callback);

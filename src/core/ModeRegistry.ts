@@ -38,7 +38,7 @@ export class ModeRegistry {
     }));
   }
 
-  public switchMode(modeId: string): void {
+  public switchMode(modeId: string, initialSettings?: Record<string, any>): void {
     const nextMode = this.modes.get(modeId);
     if (!nextMode) {
       console.warn(`Mode "${modeId}" not found in registry.`);
@@ -51,6 +51,10 @@ export class ModeRegistry {
 
     this.activeMode = nextMode;
     this.activeMode.mount(this.canvasManager, this.globalConfig);
+
+    if (initialSettings) {
+      this.activeMode.applySettings(initialSettings);
+    }
 
     if (this.globalConfig) {
       this.globalConfig.applyBackgroundAndGrid();
