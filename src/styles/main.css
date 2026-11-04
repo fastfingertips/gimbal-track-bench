@@ -61,7 +61,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(37, 37, 38, 0.7);
+  background: rgba(37, 37, 38, 0.75);
   backdrop-filter: blur(10px);
   padding: 3px 4px;
   border-radius: 6px;
@@ -135,43 +135,44 @@ body {
 }
 
 /* ========================================================
-   3. TOP-RIGHT: MENU TOGGLE BUTTON & ISOLATED GUI WRAPPER
+   3. TOP-RIGHT: BORDERLESS ICON BUTTON & CONTROLS PANEL
    ======================================================== */
 .menu-toggle-btn {
   position: fixed;
   top: 16px;
   right: 18px;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 4px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
+  background: transparent !important;   /* No boxy background */
+  border: none !important;              /* Completely borderless */
+  outline: none !important;
+  box-shadow: none !important;          /* No shadow frame */
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  transition: all 0.15s ease-in-out;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  opacity: 0.7;
+  transition: all 0.2s ease-in-out;
 }
 
 .menu-toggle-btn:hover {
-  background: var(--bg-tertiary);
+  opacity: 1;
   color: var(--vscode-blue-hover);
-  border-color: var(--vscode-blue);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.06) !important;
+  transform: scale(1.08);
 }
 
 .menu-toggle-btn.active {
-  background: var(--vscode-blue-muted);
-  color: var(--vscode-blue-hover);
-  border-color: var(--vscode-blue);
+  opacity: 1;
+  color: var(--vscode-blue);
 }
 
 .gui-wrapper {
   position: fixed;
-  top: 58px;
+  top: 56px;
   right: 18px;
   width: 320px;
   z-index: 9999;

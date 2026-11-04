@@ -1,14 +1,27 @@
 import Konva from 'konva';
 
+export interface CanvasDimensions {
+  width: number;
+  height: number;
+}
+
+export type ResizeCallback = (dims: CanvasDimensions) => void;
+
 /**
- * CanvasManager handles full-screen Konva stage creation and layers.
+ * CanvasManager handles full-screen Konva stage creation, layers, and resize observers.
  */
 export class CanvasManager {
-  constructor(containerId) {
-    this.container = document.getElementById(containerId);
-    if (!this.container) {
+  private container: HTMLElement;
+  public stage: Konva.Stage;
+  private layers: Map<string, Konva.Layer>;
+  private resizeCallbacks: Set<ResizeCallback>;
+
+  constructor(containerId: string) {
+    const el = document.getElementById(containerId);
+    if (!el) {
       throw new Error(`Container #${containerId} not found`);
     }
+    this.container = el;
 
     const { width, height } = this.getDimensions();
 
@@ -24,35 +37,35 @@ export class CanvasManager {
     window.addEventListener('resize', () => this.handleResize());
   }
 
-  getDimensions() {
+  public getDimensions(): CanvasDimensions {
     return {
       width: this.container.clientWidth || window.innerWidth,
       height: this.container.clientHeight || window.innerHeight,
     };
   }
 
-  getLayer(name) {
+  public getLayer(name: string): Konva.Layer {
     if (!this.layers.has(name)) {
       const layer = new Konva.Layer();
       this.stage.add(layer);
       this.layers.set(name, layer);
     }
-    return this.layers.get(name);
+    return this.layers.get(name)!;
   }
 
-  clearAllLayers() {
+  public clearAllLayers(): void {
     this.layers.forEach((layer) => {
       layer.destroyChildren();
       layer.batchDraw();
     });
   }
 
-  onResize(callback) {
+  public onResize(callback: ResizeCallback): () => void {
     this.resizeCallbacks.add(callback);
     return () => this.resizeCallbacks.delete(callback);
   }
 
-  handleResize() {
+  public handleResize(): void {
     const { width, height } = this.getDimensions();
     this.stage.width(width);
     this.stage.height(height);
@@ -62,7 +75,7 @@ export class CanvasManager {
     }
   }
 
-  draw() {
+  public draw(): void {
     this.layers.forEach((layer) => layer.batchDraw());
   }
 }

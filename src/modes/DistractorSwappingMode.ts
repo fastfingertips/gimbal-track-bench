@@ -1,30 +1,37 @@
 import Konva from 'konva';
 import gsap from 'gsap';
-import { BaseMode } from '../core/BaseMode.js';
+import { BaseMode } from '../core/BaseMode';
+import type { ModeControlSpec } from '../core/BaseMode';
+import type { GlobalSettings } from '../core/GlobalConfig';
 
-/**
- * DistractorSwappingMode (Crossing Paths Benchmark)
- * Tests whether an AI camera maintains identity lock on the primary target
- * when a second "distractor" object crosses its path directly or diagonally.
- */
 export class DistractorSwappingMode extends BaseMode {
+  private primaryRadius: number = 36;
+  private distractorRadius: number = 36;
+  private distractorColor: string = '#e06c75';
+  private crossingPattern: string = 'x-cross';
+  private duration: number = 4.0;
+
+  private primaryLayer!: Konva.Layer;
+  private distractorLayer!: Konva.Layer;
+  private primaryGroup!: Konva.Group;
+  private primaryCircle!: Konva.Circle;
+  private primaryText!: Konva.Text;
+  private distractorGroup!: Konva.Group;
+  private distractorCircle!: Konva.Circle;
+  private distractorText!: Konva.Text;
+
+  private primaryTween: gsap.core.Tween | null = null;
+  private distractorTween: gsap.core.Tween | null = null;
+
   constructor() {
     super({
       id: 'distractor-swapping',
       name: 'Crossing Paths (Target Swap Test)',
       description: 'Simulates secondary moving objects crossing the primary target to test AI identity lock.',
     });
-
-    this.primaryRadius = 36;
-    this.distractorRadius = 36;
-    this.distractorColor = '#e06c75'; // Soft matte red
-    this.crossingPattern = 'x-cross'; // 'x-cross' | 'head-on' | 'orbit-chase'
-    this.duration = 4.0;
-    this.primaryTween = null;
-    this.distractorTween = null;
   }
 
-  getControls() {
+  public getControls(): ModeControlSpec[] {
     return [
       {
         id: 'crossingPattern',
@@ -36,7 +43,7 @@ export class DistractorSwappingMode extends BaseMode {
           'Orbit & Intersect': 'orbit-chase',
         },
         value: this.crossingPattern,
-        onChange: (val) => {
+        onChange: (val: string) => {
           this.crossingPattern = val;
           this.setupAnimation();
         },
@@ -49,10 +56,10 @@ export class DistractorSwappingMode extends BaseMode {
         max: 80,
         step: 2,
         value: this.distractorRadius,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.distractorRadius = val;
-          if (this.distractor) {
-            this.distractor.radius(this.distractorRadius);
+          if (this.distractorCircle) {
+            this.distractorCircle.radius(this.distractorRadius);
             this.distractorLayer.batchDraw();
           }
         },
@@ -67,7 +74,7 @@ export class DistractorSwappingMode extends BaseMode {
           'Same as Target': 'SAME',
         },
         value: this.distractorColor,
-        onChange: (val) => {
+        onChange: (val: string) => {
           this.distractorColor = val;
           this.updateDistractorColor();
         },
@@ -75,14 +82,13 @@ export class DistractorSwappingMode extends BaseMode {
     ];
   }
 
-  setupElements() {
-    this.primaryLayer = this.canvasManager.getLayer('primary-target-layer');
-    this.distractorLayer = this.canvasManager.getLayer('distractor-layer');
+  public setupElements(): void {
+    this.primaryLayer = this.canvasManager!.getLayer('primary-target-layer');
+    this.distractorLayer = this.canvasManager!.getLayer('distractor-layer');
 
     const primaryColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
     const primaryGlow = this.globalConfig ? this.globalConfig.get('targetGlow') : true;
 
-    // Primary Target (with subtle label 'A')
     this.primaryGroup = new Konva.Group();
     this.primaryCircle = new Konva.Circle({
       radius: this.primaryRadius,
@@ -104,7 +110,6 @@ export class DistractorSwappingMode extends BaseMode {
     this.primaryGroup.add(this.primaryText);
     this.primaryLayer.add(this.primaryGroup);
 
-    // Distractor Target (with label 'B')
     this.distractorGroup = new Konva.Group();
     const actualDistractorColor = this.distractorColor === 'SAME' ? primaryColor : this.distractorColor;
     this.distractorCircle = new Konva.Circle({
@@ -131,7 +136,7 @@ export class DistractorSwappingMode extends BaseMode {
     this.distractorLayer.batchDraw();
   }
 
-  updateDistractorColor() {
+  public updateDistractorColor(): void {
     if (!this.distractorCircle) return;
     const primaryColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
     const color = this.distractorColor === 'SAME' ? primaryColor : this.distractorColor;
@@ -140,8 +145,8 @@ export class DistractorSwappingMode extends BaseMode {
     this.distractorLayer.batchDraw();
   }
 
-  setupAnimation() {
-    const { width, height } = this.canvasManager.getDimensions();
+  public setupAnimation(): void {
+    const { width, height } = this.canvasManager!.getDimensions();
     const padX = 80;
     const padY = 80;
 
@@ -149,7 +154,6 @@ export class DistractorSwappingMode extends BaseMode {
     if (this.distractorTween) this.distractorTween.kill();
 
     if (this.crossingPattern === 'x-cross') {
-      // Primary travels Top-Left <-> Bottom-Right
       this.primaryGroup.position({ x: padX, y: padY });
       this.primaryTween = gsap.to(this.primaryGroup, {
         x: width - padX,
@@ -161,7 +165,6 @@ export class DistractorSwappingMode extends BaseMode {
         onUpdate: () => this.primaryLayer.batchDraw(),
       });
 
-      // Distractor travels Bottom-Left <-> Top-Right (Perfect center intersection)
       this.distractorGroup.position({ x: padX, y: height - padY });
       this.distractorTween = gsap.to(this.distractorGroup, {
         x: width - padX,
@@ -173,7 +176,6 @@ export class DistractorSwappingMode extends BaseMode {
         onUpdate: () => this.distractorLayer.batchDraw(),
       });
     } else if (this.crossingPattern === 'head-on') {
-      // Both move horizontally across same centerY line and pass directly through each other
       const centerY = height / 2;
       this.primaryGroup.position({ x: padX, y: centerY });
       this.primaryTween = gsap.to(this.primaryGroup, {
@@ -195,7 +197,6 @@ export class DistractorSwappingMode extends BaseMode {
         onUpdate: () => this.distractorLayer.batchDraw(),
       });
     } else if (this.crossingPattern === 'orbit-chase') {
-      // Primary moves horizontally, distractor orbits around center crossing repeatedly
       this.primaryGroup.position({ x: padX, y: height / 2 });
       this.primaryTween = gsap.to(this.primaryGroup, {
         x: width - padX,
@@ -229,7 +230,7 @@ export class DistractorSwappingMode extends BaseMode {
     }
   }
 
-  onGlobalConfigChange(settings) {
+  public override onGlobalConfigChange(settings: GlobalSettings): void {
     if (this.primaryCircle) {
       this.primaryCircle.fill(settings.targetColor);
       this.primaryCircle.shadowColor(settings.targetColor);
@@ -239,23 +240,23 @@ export class DistractorSwappingMode extends BaseMode {
     this.updateDistractorColor();
   }
 
-  setPaused(paused) {
+  public override setPaused(paused: boolean): void {
     super.setPaused(paused);
     if (this.primaryTween) paused ? this.primaryTween.pause() : this.primaryTween.play();
     if (this.distractorTween) paused ? this.distractorTween.pause() : this.distractorTween.play();
   }
 
-  setTimeScale(scale) {
+  public override setTimeScale(scale: number): void {
     super.setTimeScale(scale);
     if (this.primaryTween) this.primaryTween.timeScale(scale);
     if (this.distractorTween) this.distractorTween.timeScale(scale);
   }
 
-  onResize() {
+  public override onResize(): void {
     this.setupAnimation();
   }
 
-  cleanupAnimation() {
+  public override cleanupAnimation(): void {
     if (this.primaryTween) {
       this.primaryTween.kill();
       this.primaryTween = null;
@@ -266,4 +267,3 @@ export class DistractorSwappingMode extends BaseMode {
     }
   }
 }
-

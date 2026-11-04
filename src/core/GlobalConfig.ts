@@ -1,63 +1,75 @@
 import Konva from 'konva';
+import type { CanvasManager } from './CanvasManager';
+
+export interface GlobalSettings {
+  targetColor: string;
+  targetGlow: boolean;
+  glowBlur: number;
+  obstacleColor: string;
+  obstacleOpacity: number;
+  backgroundColor: string;
+  showGrid: boolean;
+  gridSpacing: number;
+  gridColor: string;
+  crosshair: boolean;
+}
+
+export type GlobalConfigChangeListener = (settings: GlobalSettings) => void;
 
 /**
  * GlobalConfig holds cross-mode visual settings that PTZ camera testers frequently tune.
- * Defaults are now tailored to a sleek, matte VS Code Dark+ style palette.
  */
 export class GlobalConfig {
-  constructor(canvasManager) {
+  private canvasManager: CanvasManager;
+  public settings: GlobalSettings;
+  private changeListeners: Set<GlobalConfigChangeListener>;
+
+  constructor(canvasManager: CanvasManager) {
     this.canvasManager = canvasManager;
 
     this.settings = {
-      // Target appearance (Default to stylish Cyan/VS Code tracking blue)
       targetColor: '#007acc',
       targetGlow: true,
       glowBlur: 14,
-
-      // Obstacle appearance (Pure matte dark block)
       obstacleColor: '#141414',
       obstacleOpacity: 1.0,
-
-      // Background appearance (VS Code editor gray #1e1e1e)
       backgroundColor: '#1e1e1e',
       showGrid: true,
       gridSpacing: 60,
       gridColor: '#2b2b2e',
-
-      // Camera assistance
       crosshair: false,
     };
 
     this.changeListeners = new Set();
   }
 
-  get(key) {
+  public get<K extends keyof GlobalSettings>(key: K): GlobalSettings[K] {
     return this.settings[key];
   }
 
-  set(key, value) {
+  public set<K extends keyof GlobalSettings>(key: K, value: GlobalSettings[K]): void {
     this.settings[key] = value;
     this.notify();
   }
 
-  update(patch) {
+  public update(patch: Partial<GlobalSettings>): void {
     Object.assign(this.settings, patch);
     this.notify();
   }
 
-  onChange(callback) {
+  public onChange(callback: GlobalConfigChangeListener): () => void {
     this.changeListeners.add(callback);
     return () => this.changeListeners.delete(callback);
   }
 
-  notify() {
+  private notify(): void {
     this.applyBackgroundAndGrid();
     for (const cb of this.changeListeners) {
       cb(this.settings);
     }
   }
 
-  applyBackgroundAndGrid() {
+  public applyBackgroundAndGrid(): void {
     const container = document.getElementById('canvas-container');
     if (container) {
       container.style.backgroundColor = this.settings.backgroundColor;

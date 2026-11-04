@@ -1,20 +1,36 @@
+import type { CanvasManager } from './CanvasManager';
+import type { GlobalConfig } from './GlobalConfig';
+import type { BaseMode } from './BaseMode';
+import type { UIManager } from '../ui/UIManager';
+
+export interface ModeSummary {
+  id: string;
+  name: string;
+  description: string;
+}
+
 /**
  * ModeRegistry manages registered test modes and handles mode switching.
  */
 export class ModeRegistry {
-  constructor(canvasManager, uiManager, globalConfig) {
+  private canvasManager: CanvasManager;
+  private uiManager: UIManager | null;
+  private globalConfig: GlobalConfig;
+  private modes: Map<string, BaseMode>;
+  private activeMode: BaseMode | null = null;
+
+  constructor(canvasManager: CanvasManager, uiManager: UIManager | null, globalConfig: GlobalConfig) {
     this.canvasManager = canvasManager;
     this.uiManager = uiManager;
     this.globalConfig = globalConfig;
     this.modes = new Map();
-    this.activeMode = null;
   }
 
-  register(modeInstance) {
+  public register(modeInstance: BaseMode): void {
     this.modes.set(modeInstance.id, modeInstance);
   }
 
-  getAllModes() {
+  public getAllModes(): ModeSummary[] {
     return Array.from(this.modes.values()).map((mode) => ({
       id: mode.id,
       name: mode.name,
@@ -22,7 +38,7 @@ export class ModeRegistry {
     }));
   }
 
-  switchMode(modeId) {
+  public switchMode(modeId: string): void {
     const nextMode = this.modes.get(modeId);
     if (!nextMode) {
       console.warn(`Mode "${modeId}" not found in registry.`);
@@ -36,12 +52,10 @@ export class ModeRegistry {
     this.activeMode = nextMode;
     this.activeMode.mount(this.canvasManager, this.globalConfig);
 
-    // Refresh background and grid in case layers were cleared
     if (this.globalConfig) {
       this.globalConfig.applyBackgroundAndGrid();
     }
 
-    // Synchronize UI with current mode
     if (this.uiManager) {
       this.uiManager.renderModeControls(this.activeMode);
       this.activeMode.setPaused(this.uiManager.isPaused);
@@ -49,7 +63,7 @@ export class ModeRegistry {
     }
   }
 
-  getActiveMode() {
+  public getActiveMode(): BaseMode | null {
     return this.activeMode;
   }
 }

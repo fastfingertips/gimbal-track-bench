@@ -1,26 +1,33 @@
 import Konva from 'konva';
 import gsap from 'gsap';
-import { BaseMode } from '../core/BaseMode.js';
+import { BaseMode } from '../core/BaseMode';
+import type { ModeControlSpec } from '../core/BaseMode';
+import type { GlobalSettings } from '../core/GlobalConfig';
 
 export class CircularTrackingMode extends BaseMode {
+  private radius: number = 35;
+  private orbitRadiusRatio: number = 0.35;
+  private orbitEccentricity: number = 1.0;
+  private direction: number = 1;
+  private showTrail: boolean = true;
+  private baseDuration: number = 5;
+  private orbitAngle: { angle: number } = { angle: 0 };
+
+  private guideLayer!: Konva.Layer;
+  private targetLayer!: Konva.Layer;
+  private guideEllipse!: Konva.Ellipse;
+  private target!: Konva.Circle;
+  private tween: gsap.core.Tween | null = null;
+
   constructor() {
     super({
       id: 'circular-tracking',
       name: 'Circular Orbit (Pan/Tilt Speed)',
       description: 'Continuous circular tracking to evaluate angular acceleration and gimbal smoothness.',
     });
-
-    this.radius = 35;
-    this.orbitRadiusRatio = 0.35;
-    this.orbitEccentricity = 1.0; // 1.0 = circle, >1.0 = oval/ellipse
-    this.direction = 1; // 1 = clockwise, -1 = counter-clockwise
-    this.showTrail = true;
-    this.baseDuration = 5;
-    this.orbitAngle = { angle: 0 };
-    this.tween = null;
   }
 
-  getControls() {
+  public getControls(): ModeControlSpec[] {
     return [
       {
         id: 'orbitRadius',
@@ -30,7 +37,7 @@ export class CircularTrackingMode extends BaseMode {
         max: 48,
         step: 1,
         value: Math.round(this.orbitRadiusRatio * 100),
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.orbitRadiusRatio = val / 100;
           this.updateOrbitGuide();
         },
@@ -43,7 +50,7 @@ export class CircularTrackingMode extends BaseMode {
         max: 2.2,
         step: 0.1,
         value: this.orbitEccentricity,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.orbitEccentricity = val;
           this.updateOrbitGuide();
         },
@@ -54,8 +61,8 @@ export class CircularTrackingMode extends BaseMode {
         type: 'select',
         options: { 'Clockwise (CW)': 1, 'Counter-Clockwise (CCW)': -1 },
         value: this.direction,
-        onChange: (val) => {
-          this.direction = parseInt(val, 10);
+        onChange: (val: string | number) => {
+          this.direction = parseInt(String(val), 10);
           this.setupAnimation();
         },
       },
@@ -67,7 +74,7 @@ export class CircularTrackingMode extends BaseMode {
         max: 80,
         step: 2,
         value: this.radius,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.radius = val;
           if (this.target) {
             this.target.radius(this.radius);
@@ -80,7 +87,7 @@ export class CircularTrackingMode extends BaseMode {
         label: 'Show Path Guide',
         type: 'checkbox',
         value: this.showTrail,
-        onChange: (val) => {
+        onChange: (val: boolean) => {
           this.showTrail = val;
           if (this.guideEllipse) {
             this.guideEllipse.visible(val);
@@ -91,21 +98,20 @@ export class CircularTrackingMode extends BaseMode {
     ];
   }
 
-  setupElements() {
-    const { width, height } = this.canvasManager.getDimensions();
+  public setupElements(): void {
+    const { width, height } = this.canvasManager!.getDimensions();
     const centerX = width / 2;
     const centerY = height / 2;
     const minDim = Math.min(width, height);
     const radiusY = minDim * this.orbitRadiusRatio;
     const radiusX = radiusY * this.orbitEccentricity;
 
-    this.guideLayer = this.canvasManager.getLayer('guide-layer');
-    this.targetLayer = this.canvasManager.getLayer('target-layer');
+    this.guideLayer = this.canvasManager!.getLayer('guide-layer');
+    this.targetLayer = this.canvasManager!.getLayer('target-layer');
 
-    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#00ff66';
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
     const targetGlow = this.globalConfig ? this.globalConfig.get('targetGlow') : true;
 
-    // Guide Ellipse
     this.guideEllipse = new Konva.Ellipse({
       x: centerX,
       y: centerY,
@@ -118,7 +124,6 @@ export class CircularTrackingMode extends BaseMode {
     });
     this.guideLayer.add(this.guideEllipse);
 
-    // Target
     this.target = new Konva.Circle({
       x: centerX + radiusX,
       y: centerY,
@@ -134,8 +139,8 @@ export class CircularTrackingMode extends BaseMode {
     this.targetLayer.batchDraw();
   }
 
-  updateOrbitGuide() {
-    const { width, height } = this.canvasManager.getDimensions();
+  public updateOrbitGuide(): void {
+    const { width, height } = this.canvasManager!.getDimensions();
     const centerX = width / 2;
     const centerY = height / 2;
     const minDim = Math.min(width, height);
@@ -150,7 +155,7 @@ export class CircularTrackingMode extends BaseMode {
     }
   }
 
-  setupAnimation() {
+  public setupAnimation(): void {
     if (this.tween) {
       this.tween.kill();
     }
@@ -163,7 +168,7 @@ export class CircularTrackingMode extends BaseMode {
       ease: 'none',
       repeat: -1,
       onUpdate: () => {
-        const { width, height } = this.canvasManager.getDimensions();
+        const { width, height } = this.canvasManager!.getDimensions();
         const centerX = width / 2;
         const centerY = height / 2;
         const minDim = Math.min(width, height);
@@ -184,7 +189,7 @@ export class CircularTrackingMode extends BaseMode {
     }
   }
 
-  onGlobalConfigChange(settings) {
+  public override onGlobalConfigChange(settings: GlobalSettings): void {
     if (this.target) {
       this.target.fill(settings.targetColor);
       this.target.shadowColor(settings.targetColor);
@@ -193,23 +198,23 @@ export class CircularTrackingMode extends BaseMode {
     }
   }
 
-  setPaused(paused) {
+  public override setPaused(paused: boolean): void {
     super.setPaused(paused);
     if (!this.tween) return;
     if (paused) this.tween.pause();
     else this.tween.play();
   }
 
-  setTimeScale(scale) {
+  public override setTimeScale(scale: number): void {
     super.setTimeScale(scale);
     if (this.tween) this.tween.timeScale(scale);
   }
 
-  onResize() {
+  public override onResize(): void {
     this.updateOrbitGuide();
   }
 
-  cleanupAnimation() {
+  public override cleanupAnimation(): void {
     if (this.tween) {
       this.tween.kill();
       this.tween = null;

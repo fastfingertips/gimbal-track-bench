@@ -1,25 +1,32 @@
 import Konva from 'konva';
 import gsap from 'gsap';
-import { BaseMode } from '../core/BaseMode.js';
+import { BaseMode } from '../core/BaseMode';
+import type { ModeControlSpec } from '../core/BaseMode';
+import type { GlobalSettings } from '../core/GlobalConfig';
 
 export class LinearOcclusionMode extends BaseMode {
+  private radius: number = 40;
+  private obstacleWidth: number = 300;
+  private obstacleCount: number = 1;
+  private baseDuration: number = 4;
+  private easeType: string = 'none';
+  private verticalOffset: number = 0;
+
+  private targetLayer!: Konva.Layer;
+  private obstacleLayer!: Konva.Layer;
+  private target!: Konva.Circle;
+  private obstacles: Konva.Rect[] = [];
+  private tween: gsap.core.Tween | null = null;
+
   constructor() {
     super({
       id: 'linear-occlusion',
       name: 'Linear Occlusion (Center Block)',
       description: 'Horizontal tracking pass with a center obstacle to test occlusion recovery.',
     });
-
-    this.radius = 40;
-    this.obstacleWidth = 300;
-    this.obstacleCount = 1; // 1 or 2 pillars
-    this.baseDuration = 4;
-    this.easeType = 'none'; // 'none' | 'power2.inOut' | 'sine.inOut'
-    this.verticalOffset = 0; // vertical drift
-    this.tween = null;
   }
 
-  getControls() {
+  public getControls(): ModeControlSpec[] {
     return [
       {
         id: 'obstacleWidth',
@@ -29,7 +36,7 @@ export class LinearOcclusionMode extends BaseMode {
         max: 800,
         step: 10,
         value: this.obstacleWidth,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.obstacleWidth = val;
           this.updateObstacles();
         },
@@ -40,8 +47,8 @@ export class LinearOcclusionMode extends BaseMode {
         type: 'select',
         options: { 'Single Pillar (Center)': 1, 'Dual Pillars': 2 },
         value: this.obstacleCount,
-        onChange: (val) => {
-          this.obstacleCount = parseInt(val, 10);
+        onChange: (val: string | number) => {
+          this.obstacleCount = parseInt(String(val), 10);
           this.rebuildObstacles();
         },
       },
@@ -53,7 +60,7 @@ export class LinearOcclusionMode extends BaseMode {
         max: 100,
         step: 2,
         value: this.radius,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.radius = val;
           if (this.target) {
             this.target.radius(this.radius);
@@ -68,7 +75,7 @@ export class LinearOcclusionMode extends BaseMode {
         type: 'select',
         options: { 'Linear (Constant)': 'none', 'Ease In-Out': 'power2.inOut', 'Sine Wave': 'sine.inOut' },
         value: this.easeType,
-        onChange: (val) => {
+        onChange: (val: string) => {
           this.easeType = val;
           this.setupAnimation();
         },
@@ -81,9 +88,9 @@ export class LinearOcclusionMode extends BaseMode {
         max: 150,
         step: 10,
         value: this.verticalOffset,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.verticalOffset = val;
-          const { height } = this.canvasManager.getDimensions();
+          const { height } = this.canvasManager!.getDimensions();
           if (this.target) {
             this.target.y(height / 2 + this.verticalOffset);
             this.targetLayer.batchDraw();
@@ -93,16 +100,15 @@ export class LinearOcclusionMode extends BaseMode {
     ];
   }
 
-  setupElements() {
-    const { height } = this.canvasManager.getDimensions();
+  public setupElements(): void {
+    const { height } = this.canvasManager!.getDimensions();
 
-    this.targetLayer = this.canvasManager.getLayer('target-layer');
-    this.obstacleLayer = this.canvasManager.getLayer('obstacle-layer');
+    this.targetLayer = this.canvasManager!.getLayer('target-layer');
+    this.obstacleLayer = this.canvasManager!.getLayer('obstacle-layer');
 
-    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#00ff66';
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
     const targetGlow = this.globalConfig ? this.globalConfig.get('targetGlow') : true;
 
-    // Target circle
     this.target = new Konva.Circle({
       x: this.radius,
       y: height / 2 + this.verticalOffset,
@@ -118,10 +124,10 @@ export class LinearOcclusionMode extends BaseMode {
     this.targetLayer.batchDraw();
   }
 
-  rebuildObstacles() {
+  public rebuildObstacles(): void {
     this.obstacleLayer.destroyChildren();
-    const { width, height } = this.canvasManager.getDimensions();
-    const obsColor = this.globalConfig ? this.globalConfig.get('obstacleColor') : '#000000';
+    const { width, height } = this.canvasManager!.getDimensions();
+    const obsColor = this.globalConfig ? this.globalConfig.get('obstacleColor') : '#141414';
     const obsOpacity = this.globalConfig ? this.globalConfig.get('obstacleOpacity') : 1.0;
 
     this.obstacles = [];
@@ -138,7 +144,6 @@ export class LinearOcclusionMode extends BaseMode {
       this.obstacleLayer.add(rect);
       this.obstacles.push(rect);
     } else {
-      // 2 Pillars placed at 33% and 66% width
       const spacing = width / 3;
       const r1 = new Konva.Rect({
         x: spacing - this.obstacleWidth / 2,
@@ -164,12 +169,12 @@ export class LinearOcclusionMode extends BaseMode {
     this.obstacleLayer.batchDraw();
   }
 
-  updateObstacles() {
+  public updateObstacles(): void {
     this.rebuildObstacles();
   }
 
-  setupAnimation() {
-    const { width } = this.canvasManager.getDimensions();
+  public setupAnimation(): void {
+    const { width } = this.canvasManager!.getDimensions();
     const startX = this.radius;
     const endX = width - this.radius;
 
@@ -197,7 +202,7 @@ export class LinearOcclusionMode extends BaseMode {
     }
   }
 
-  onGlobalConfigChange(settings) {
+  public override onGlobalConfigChange(settings: GlobalSettings): void {
     if (this.target) {
       this.target.fill(settings.targetColor);
       this.target.shadowColor(settings.targetColor);
@@ -213,20 +218,20 @@ export class LinearOcclusionMode extends BaseMode {
     }
   }
 
-  setPaused(paused) {
+  public override setPaused(paused: boolean): void {
     super.setPaused(paused);
     if (!this.tween) return;
     if (paused) this.tween.pause();
     else this.tween.play();
   }
 
-  setTimeScale(scale) {
+  public override setTimeScale(scale: number): void {
     super.setTimeScale(scale);
     if (this.tween) this.tween.timeScale(scale);
   }
 
-  onResize() {
-    const { height } = this.canvasManager.getDimensions();
+  public override onResize(): void {
+    const { height } = this.canvasManager!.getDimensions();
     if (this.target) {
       this.target.y(height / 2 + this.verticalOffset);
     }
@@ -234,7 +239,7 @@ export class LinearOcclusionMode extends BaseMode {
     this.setupAnimation();
   }
 
-  cleanupAnimation() {
+  public override cleanupAnimation(): void {
     if (this.tween) {
       this.tween.kill();
       this.tween = null;

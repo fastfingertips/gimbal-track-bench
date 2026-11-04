@@ -1,29 +1,29 @@
 import Konva from 'konva';
 import gsap from 'gsap';
-import { BaseMode } from '../core/BaseMode.js';
+import { BaseMode } from '../core/BaseMode';
+import type { ModeControlSpec } from '../core/BaseMode';
+import type { GlobalSettings } from '../core/GlobalConfig';
 
-/**
- * DepthZoomMode
- * Simulates a subject moving towards and away from the camera (depth changes)
- * to evaluate AI Auto-Framing, Auto-Zoom responsiveness, and Focus Hunting.
- */
 export class DepthZoomMode extends BaseMode {
+  private minRadius: number = 15;
+  private maxRadius: number = 110;
+  private zoomCycleDuration: number = 4.0;
+  private movementPath: string = 'drift';
+
+  private targetLayer!: Konva.Layer;
+  private target!: Konva.Circle;
+  private zoomTween: gsap.core.Tween | null = null;
+  private posTween: gsap.core.Tween | null = null;
+
   constructor() {
     super({
       id: 'depth-zoom',
       name: 'Depth & Auto-Zoom (Scale Framing)',
       description: 'Tests camera auto-zoom and auto-framing by simulating perspective depth changes.',
     });
-
-    this.minRadius = 15; // Far away (Small subject)
-    this.maxRadius = 110; // Close up (Fills frame)
-    this.zoomCycleDuration = 4.0;
-    this.movementPath = 'drift'; // 'center-pulse' | 'drift' | 'elliptical-approach'
-    this.zoomTween = null;
-    this.posTween = null;
   }
 
-  getControls() {
+  public getControls(): ModeControlSpec[] {
     return [
       {
         id: 'movementPath',
@@ -35,7 +35,7 @@ export class DepthZoomMode extends BaseMode {
           'Elliptical Perspective Run': 'elliptical-approach',
         },
         value: this.movementPath,
-        onChange: (val) => {
+        onChange: (val: string) => {
           this.movementPath = val;
           this.setupAnimation();
         },
@@ -48,7 +48,7 @@ export class DepthZoomMode extends BaseMode {
         max: 180,
         step: 5,
         value: this.maxRadius,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.maxRadius = val;
           this.setupAnimation();
         },
@@ -61,7 +61,7 @@ export class DepthZoomMode extends BaseMode {
         max: 40,
         step: 2,
         value: this.minRadius,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.minRadius = val;
           this.setupAnimation();
         },
@@ -69,9 +69,9 @@ export class DepthZoomMode extends BaseMode {
     ];
   }
 
-  setupElements() {
-    this.targetLayer = this.canvasManager.getLayer('target-layer');
-    const { width, height } = this.canvasManager.getDimensions();
+  public setupElements(): void {
+    this.targetLayer = this.canvasManager!.getLayer('target-layer');
+    const { width, height } = this.canvasManager!.getDimensions();
 
     const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
     const targetGlow = this.globalConfig ? this.globalConfig.get('targetGlow') : true;
@@ -90,13 +90,12 @@ export class DepthZoomMode extends BaseMode {
     this.targetLayer.batchDraw();
   }
 
-  setupAnimation() {
-    const { width, height } = this.canvasManager.getDimensions();
+  public setupAnimation(): void {
+    const { width, height } = this.canvasManager!.getDimensions();
 
     if (this.zoomTween) this.zoomTween.kill();
     if (this.posTween) this.posTween.kill();
 
-    // 1. Scale animation (Perspective depth)
     this.target.radius(this.minRadius);
     this.zoomTween = gsap.to(this.target, {
       radius: this.maxRadius,
@@ -109,7 +108,6 @@ export class DepthZoomMode extends BaseMode {
       },
     });
 
-    // 2. Positional animation based on selected path
     if (this.movementPath === 'center-pulse') {
       this.target.position({ x: width / 2, y: height / 2 });
     } else if (this.movementPath === 'drift') {
@@ -146,7 +144,7 @@ export class DepthZoomMode extends BaseMode {
     }
   }
 
-  onGlobalConfigChange(settings) {
+  public override onGlobalConfigChange(settings: GlobalSettings): void {
     if (this.target) {
       this.target.fill(settings.targetColor);
       this.target.shadowColor(settings.targetColor);
@@ -155,23 +153,23 @@ export class DepthZoomMode extends BaseMode {
     }
   }
 
-  setPaused(paused) {
+  public override setPaused(paused: boolean): void {
     super.setPaused(paused);
     if (this.zoomTween) paused ? this.zoomTween.pause() : this.zoomTween.play();
     if (this.posTween) paused ? this.posTween.pause() : this.posTween.play();
   }
 
-  setTimeScale(scale) {
+  public override setTimeScale(scale: number): void {
     super.setTimeScale(scale);
     if (this.zoomTween) this.zoomTween.timeScale(scale);
     if (this.posTween) this.posTween.timeScale(scale);
   }
 
-  onResize() {
+  public override onResize(): void {
     this.setupAnimation();
   }
 
-  cleanupAnimation() {
+  public override cleanupAnimation(): void {
     if (this.zoomTween) {
       this.zoomTween.kill();
       this.zoomTween = null;
@@ -182,4 +180,3 @@ export class DepthZoomMode extends BaseMode {
     }
   }
 }
-

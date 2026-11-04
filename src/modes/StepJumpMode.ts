@@ -1,24 +1,36 @@
 import Konva from 'konva';
 import gsap from 'gsap';
-import { BaseMode } from '../core/BaseMode.js';
+import { BaseMode } from '../core/BaseMode';
+import type { ModeControlSpec } from '../core/BaseMode';
+import type { GlobalSettings } from '../core/GlobalConfig';
+
+interface Waypoint {
+  x: number;
+  y: number;
+}
 
 export class StepJumpMode extends BaseMode {
+  private radius: number = 40;
+  private holdDuration: number = 1.8;
+  private jumpDuration: number = 0.15;
+  private pattern: string = 'quadrant';
+  private showMarkers: boolean = true;
+
+  private waypointsLayer!: Konva.Layer;
+  private targetLayer!: Konva.Layer;
+  private target!: Konva.Circle;
+  private waypointMarkers: Konva.Group[] = [];
+  private timeline: gsap.core.Timeline | null = null;
+
   constructor() {
     super({
       id: 'step-jump',
       name: 'Step Response & Saccade Jump',
       description: 'Instantaneous position hops to test camera response time, latency, and overshoot.',
     });
-
-    this.radius = 40;
-    this.holdDuration = 1.8;
-    this.jumpDuration = 0.15; // 0 = teleport / instant saccade
-    this.pattern = 'quadrant'; // 'quadrant' | 'horizontal-snap' | 'diagonal-cross' | 'random'
-    this.showMarkers = true;
-    this.timeline = null;
   }
 
-  getControls() {
+  public getControls(): ModeControlSpec[] {
     return [
       {
         id: 'pattern',
@@ -30,7 +42,7 @@ export class StepJumpMode extends BaseMode {
           'Diagonal Cross (X-Pattern)': 'diagonal-cross',
         },
         value: this.pattern,
-        onChange: (val) => {
+        onChange: (val: string) => {
           this.pattern = val;
           this.rebuildWaypoints();
           this.setupAnimation();
@@ -44,7 +56,7 @@ export class StepJumpMode extends BaseMode {
         max: 5.0,
         step: 0.1,
         value: this.holdDuration,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.holdDuration = val;
           this.setupAnimation();
         },
@@ -57,7 +69,7 @@ export class StepJumpMode extends BaseMode {
         max: 1.0,
         step: 0.05,
         value: this.jumpDuration,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.jumpDuration = val;
           this.setupAnimation();
         },
@@ -70,7 +82,7 @@ export class StepJumpMode extends BaseMode {
         max: 80,
         step: 5,
         value: this.radius,
-        onChange: (val) => {
+        onChange: (val: number) => {
           this.radius = val;
           if (this.target) {
             this.target.radius(this.radius);
@@ -83,7 +95,7 @@ export class StepJumpMode extends BaseMode {
         label: 'Show Markers',
         type: 'checkbox',
         value: this.showMarkers,
-        onChange: (val) => {
+        onChange: (val: boolean) => {
           this.showMarkers = val;
           if (this.waypointsLayer) {
             this.waypointsLayer.visible(val);
@@ -94,8 +106,8 @@ export class StepJumpMode extends BaseMode {
     ];
   }
 
-  getWaypoints() {
-    const { width, height } = this.canvasManager.getDimensions();
+  public getWaypoints(): Waypoint[] {
+    const { width, height } = this.canvasManager!.getDimensions();
     const padX = Math.max(90, width * 0.15);
     const padY = Math.max(90, height * 0.18);
 
@@ -114,7 +126,6 @@ export class StepJumpMode extends BaseMode {
       ];
     }
 
-    // Default 'quadrant'
     return [
       { x: padX, y: padY },
       { x: width - padX, y: padY },
@@ -124,11 +135,11 @@ export class StepJumpMode extends BaseMode {
     ];
   }
 
-  setupElements() {
-    this.waypointsLayer = this.canvasManager.getLayer('waypoints-layer');
-    this.targetLayer = this.canvasManager.getLayer('target-layer');
+  public setupElements(): void {
+    this.waypointsLayer = this.canvasManager!.getLayer('waypoints-layer');
+    this.targetLayer = this.canvasManager!.getLayer('target-layer');
 
-    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#00ff66';
+    const targetColor = this.globalConfig ? this.globalConfig.get('targetColor') : '#007acc';
     const targetGlow = this.globalConfig ? this.globalConfig.get('targetGlow') : true;
 
     this.rebuildWaypoints();
@@ -148,7 +159,7 @@ export class StepJumpMode extends BaseMode {
     this.targetLayer.batchDraw();
   }
 
-  rebuildWaypoints() {
+  public rebuildWaypoints(): void {
     this.waypointsLayer.destroyChildren();
     const waypoints = this.getWaypoints();
 
@@ -180,7 +191,7 @@ export class StepJumpMode extends BaseMode {
     this.waypointsLayer.batchDraw();
   }
 
-  setupAnimation() {
+  public setupAnimation(): void {
     if (this.timeline) {
       this.timeline.kill();
     }
@@ -189,7 +200,7 @@ export class StepJumpMode extends BaseMode {
     this.timeline = gsap.timeline({ repeat: -1 });
 
     waypoints.forEach((pt) => {
-      this.timeline.to(this.target, {
+      this.timeline!.to(this.target, {
         x: pt.x,
         y: pt.y,
         duration: this.jumpDuration,
@@ -199,7 +210,7 @@ export class StepJumpMode extends BaseMode {
         },
       });
 
-      this.timeline.to({}, { duration: this.holdDuration });
+      this.timeline!.to({}, { duration: this.holdDuration });
     });
 
     this.timeline.timeScale(this.timeScale);
@@ -208,7 +219,7 @@ export class StepJumpMode extends BaseMode {
     }
   }
 
-  onGlobalConfigChange(settings) {
+  public override onGlobalConfigChange(settings: GlobalSettings): void {
     if (this.target) {
       this.target.fill(settings.targetColor);
       this.target.shadowColor(settings.targetColor);
@@ -217,24 +228,24 @@ export class StepJumpMode extends BaseMode {
     }
   }
 
-  setPaused(paused) {
+  public override setPaused(paused: boolean): void {
     super.setPaused(paused);
     if (!this.timeline) return;
     if (paused) this.timeline.pause();
     else this.timeline.play();
   }
 
-  setTimeScale(scale) {
+  public override setTimeScale(scale: number): void {
     super.setTimeScale(scale);
     if (this.timeline) this.timeline.timeScale(scale);
   }
 
-  onResize() {
+  public override onResize(): void {
     this.rebuildWaypoints();
     this.setupAnimation();
   }
 
-  cleanupAnimation() {
+  public override cleanupAnimation(): void {
     if (this.timeline) {
       this.timeline.kill();
       this.timeline = null;

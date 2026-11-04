@@ -1,55 +1,65 @@
 import { Pane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
+import type { BaseMode } from '../core/BaseMode';
+import type { GlobalConfig } from '../core/GlobalConfig';
 
-/**
- * UIManager handles:
- * - Top-Left: Mode switcher pills
- * - Top-Center: Active mode name indicator
- * - Top-Right: Isolated parameter controls (Tweakpane)
- * - Bottom-Right: GitHub repo badge
- */
+export interface UIManagerOptions {
+  onPlayPauseToggle: (isPaused: boolean) => void;
+  onSpeedChange: (speed: number) => void;
+  onModeChange: (modeId: string) => void;
+  globalConfig: GlobalConfig;
+}
+
 export class UIManager {
-  constructor({ onPlayPauseToggle, onSpeedChange, onModeChange, globalConfig }) {
-    this.onPlayPauseToggle = onPlayPauseToggle;
-    this.onSpeedChange = onSpeedChange;
-    this.onModeChange = onModeChange;
-    this.globalConfig = globalConfig;
+  private onPlayPauseToggle: (isPaused: boolean) => void;
+  private onSpeedChange: (speed: number) => void;
+  private onModeChange: (modeId: string) => void;
+  private globalConfig: GlobalConfig;
 
-    this.isPaused = false;
-    this.currentSpeed = 1.0;
-    this.currentModeId = '';
-    this.isMenuVisible = true;
+  public isPaused: boolean = false;
+  public currentSpeed: number = 1.0;
+  public currentModeId: string = '';
+  public isMenuVisible: boolean = true;
+
+  private modeBar: HTMLElement | null;
+  private activeModeTitle: HTMLElement | null;
+  private guiContainer: HTMLElement | null;
+  private toggleMenuBtn: HTMLElement | null;
+
+  public pane: any;
+  private modeFolder: any = null;
+  private playPauseBtn: any;
+  private fpsGraph: any;
+
+  constructor(options: UIManagerOptions) {
+    this.onPlayPauseToggle = options.onPlayPauseToggle;
+    this.onSpeedChange = options.onSpeedChange;
+    this.onModeChange = options.onModeChange;
+    this.globalConfig = options.globalConfig;
 
     this.modeBar = document.getElementById('modeBar');
     this.activeModeTitle = document.getElementById('activeModeTitle');
     this.guiContainer = document.getElementById('gui-container');
     this.toggleMenuBtn = document.getElementById('toggleMenuBtn');
 
-    // Initialize Tweakpane inside the isolated #gui-container
     this.pane = new Pane({
-      container: this.guiContainer,
+      container: this.guiContainer as HTMLElement,
       title: 'Controls & Tuning',
       expanded: true,
     });
 
-    // Register essentials plugin (for FPS meter)
     this.pane.registerPlugin(EssentialsPlugin);
 
-    this.modeFolder = null;
     this.setupGlobalFolders();
     this.bindEvents();
   }
 
-  setupGlobalFolders() {
-    // -------------------------------------------------------------
-    // FOLDER 1: Playback & Engine (Speed, Play/Pause, FPS)
-    // -------------------------------------------------------------
+  private setupGlobalFolders(): void {
     const playbackFolder = this.pane.addFolder({
       title: 'Engine & Playback',
       expanded: true,
     });
 
-    // Speed Slider
     playbackFolder
       .addBinding({ speed: this.currentSpeed }, 'speed', {
         min: 0.1,
@@ -57,14 +67,13 @@ export class UIManager {
         step: 0.1,
         label: 'Speed Scale',
       })
-      .on('change', (ev) => {
+      .on('change', (ev: { value: number }) => {
         this.currentSpeed = ev.value;
         if (this.onSpeedChange) {
           this.onSpeedChange(this.currentSpeed);
         }
       });
 
-    // Play / Pause Button
     this.playPauseBtn = playbackFolder.addButton({
       title: '⏸ Pause (Space)',
       label: 'Playback',
@@ -74,42 +83,35 @@ export class UIManager {
       this.togglePlayPause();
     });
 
-    // FPS / Performance Meter
     this.fpsGraph = playbackFolder.addBlade({
       view: 'fpsgraph',
       label: 'Performance',
       lineCount: 2,
     });
 
-    // -------------------------------------------------------------
-    // FOLDER 2: Visual & Camera Calibration
-    // -------------------------------------------------------------
     const visualFolder = this.pane.addFolder({
       title: 'Camera & Visuals',
       expanded: false,
     });
 
     if (this.globalConfig) {
-      // Target Color (Color picker)
       visualFolder
         .addBinding(this.globalConfig.settings, 'targetColor', {
           label: 'Target Color',
           view: 'color',
         })
-        .on('change', (ev) => {
+        .on('change', (ev: { value: string }) => {
           this.globalConfig.set('targetColor', ev.value);
         });
 
-      // Target Glow Toggle
       visualFolder
         .addBinding(this.globalConfig.settings, 'targetGlow', {
           label: 'Neon Glow',
         })
-        .on('change', (ev) => {
+        .on('change', (ev: { value: boolean }) => {
           this.globalConfig.set('targetGlow', ev.value);
         });
 
-      // Glow intensity blur
       visualFolder
         .addBinding(this.globalConfig.settings, 'glowBlur', {
           label: 'Glow Blur',
@@ -117,21 +119,19 @@ export class UIManager {
           max: 40,
           step: 2,
         })
-        .on('change', (ev) => {
+        .on('change', (ev: { value: number }) => {
           this.globalConfig.set('glowBlur', ev.value);
         });
 
-      // Obstacle Color
       visualFolder
         .addBinding(this.globalConfig.settings, 'obstacleColor', {
           label: 'Obstacle Color',
           view: 'color',
         })
-        .on('change', (ev) => {
+        .on('change', (ev: { value: string }) => {
           this.globalConfig.set('obstacleColor', ev.value);
         });
 
-      // Obstacle Opacity (Transparency for semi-occlusion test)
       visualFolder
         .addBinding(this.globalConfig.settings, 'obstacleOpacity', {
           label: 'Obstacle Alpha',
@@ -139,26 +139,24 @@ export class UIManager {
           max: 1.0,
           step: 0.05,
         })
-        .on('change', (ev) => {
+        .on('change', (ev: { value: number }) => {
           this.globalConfig.set('obstacleOpacity', ev.value);
         });
 
-      // Background Color
       visualFolder
         .addBinding(this.globalConfig.settings, 'backgroundColor', {
           label: 'Background',
           view: 'color',
         })
-        .on('change', (ev) => {
+        .on('change', (ev: { value: string }) => {
           this.globalConfig.set('backgroundColor', ev.value);
         });
 
-      // Calibration Grid & Crosshair
       visualFolder
         .addBinding(this.globalConfig.settings, 'showGrid', {
           label: 'Reference Grid',
         })
-        .on('change', (ev) => {
+        .on('change', (ev: { value: boolean }) => {
           this.globalConfig.set('showGrid', ev.value);
         });
 
@@ -166,16 +164,13 @@ export class UIManager {
         .addBinding(this.globalConfig.settings, 'crosshair', {
           label: 'Center Reticle',
         })
-        .on('change', (ev) => {
+        .on('change', (ev: { value: boolean }) => {
           this.globalConfig.set('crosshair', ev.value);
         });
     }
   }
 
-  /**
-   * Render Top-Left Mode Switcher Buttons (Pills)
-   */
-  populateModeList(modes, selectedId) {
+  public populateModeList(modes: Array<{ id: string; name: string; description: string }>, selectedId: string): void {
     this.currentModeId = selectedId;
     if (!this.modeBar) return;
 
@@ -184,7 +179,7 @@ export class UIManager {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = `mode-pill ${mode.id === selectedId ? 'active' : ''}`;
-      btn.textContent = mode.name.split('(')[0].trim(); // Clean short name
+      btn.textContent = mode.name.split('(')[0].trim();
       btn.title = mode.description;
 
       btn.addEventListener('click', () => {
@@ -206,16 +201,16 @@ export class UIManager {
     }
   }
 
-  updateActivePill(modeId) {
+  public updateActivePill(modeId: string): void {
     if (!this.modeBar) return;
-    const buttons = this.modeBar.querySelectorAll('.mode-pill');
+    const buttons = this.modeBar.querySelectorAll<HTMLButtonElement>('.mode-pill');
     buttons.forEach((btn) => {
       btn.classList.toggle('active', btn.textContent === this.getModeShortName(modeId));
     });
   }
 
-  getModeShortName(modeId) {
-    const map = {
+  private getModeShortName(modeId: string): string {
+    const map: Record<string, string> = {
       'linear-occlusion': 'Linear Occlusion',
       'distractor-swapping': 'Crossing Paths',
       'depth-zoom': 'Depth & Auto-Zoom',
@@ -225,22 +220,19 @@ export class UIManager {
     return map[modeId] || modeId;
   }
 
-  renderModeControls(modeInstance) {
-    // Update Top-Center Active Mode Name Badge
+  public renderModeControls(modeInstance: BaseMode): void {
     if (this.activeModeTitle) {
       this.activeModeTitle.textContent = modeInstance.name;
     }
 
-    // Update active pill button state
     if (this.modeBar) {
-      const buttons = this.modeBar.querySelectorAll('.mode-pill');
+      const buttons = this.modeBar.querySelectorAll<HTMLButtonElement>('.mode-pill');
       buttons.forEach((btn) => {
-        const isThis = modeInstance.name.startsWith(btn.textContent);
+        const isThis = modeInstance.name.startsWith(btn.textContent || '');
         btn.classList.toggle('active', isThis);
       });
     }
 
-    // Rebuild mode controls in right panel
     if (this.modeFolder) {
       this.modeFolder.dispose();
       this.modeFolder = null;
@@ -252,7 +244,7 @@ export class UIManager {
     this.modeFolder = this.pane.addFolder({
       title: `⚙️ Mode Parameters`,
       expanded: true,
-      index: 0, // Mode parameters at the very top of right menu!
+      index: 0,
     });
 
     controls.forEach((ctrl) => {
@@ -265,7 +257,7 @@ export class UIManager {
             max: ctrl.max,
             step: ctrl.step || 1,
           })
-          .on('change', (ev) => {
+          .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
           });
       } else if (ctrl.type === 'select') {
@@ -275,7 +267,7 @@ export class UIManager {
             label: ctrl.label,
             options: ctrl.options,
           })
-          .on('change', (ev) => {
+          .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
           });
       } else if (ctrl.type === 'checkbox') {
@@ -284,14 +276,14 @@ export class UIManager {
           .addBinding(state, ctrl.id, {
             label: ctrl.label,
           })
-          .on('change', (ev) => {
+          .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
           });
       }
     });
   }
 
-  toggleMenuVisibility() {
+  public toggleMenuVisibility(): void {
     this.isMenuVisible = !this.isMenuVisible;
 
     if (this.guiContainer) {
@@ -313,7 +305,7 @@ export class UIManager {
     }
   }
 
-  togglePlayPause() {
+  public togglePlayPause(): void {
     this.isPaused = !this.isPaused;
     this.playPauseBtn.title = this.isPaused ? '▶ Play (Space)' : '⏸ Pause (Space)';
     if (this.onPlayPauseToggle) {
@@ -321,7 +313,7 @@ export class UIManager {
     }
   }
 
-  bindEvents() {
+  private bindEvents(): void {
     if (this.toggleMenuBtn) {
       this.toggleMenuBtn.classList.add('active');
       this.toggleMenuBtn.addEventListener('click', (e) => {
@@ -331,7 +323,7 @@ export class UIManager {
       });
     }
 
-    window.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'h' || e.key === 'H') {
         this.toggleMenuVisibility();
       }
