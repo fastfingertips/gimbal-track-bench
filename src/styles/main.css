@@ -9,7 +9,7 @@
   --bg-tertiary: #2d2d30;         /* VS Code Activity Bar */
   --vscode-blue: #007acc;         /* Signature VS Code Blue */
   --vscode-blue-hover: #1f8ad2;   /* Hover Blue */
-  --vscode-blue-muted: rgba(0, 122, 204, 0.2);
+  --vscode-blue-muted: rgba(0, 122, 204, 0.18);
   --border-subtle: #3e3e42;       /* Subtle dark border */
   --text-main: #cccccc;           /* VS Code Main Text */
   --text-muted: #858585;          /* VS Code Muted Text */
@@ -50,7 +50,93 @@ body {
   z-index: 1;
 }
 
-/* Top-Right Toggle Icon Button (Matte VS Code Style) */
+/* ========================================================
+   1. TOP-LEFT: MODES SWITCHER BAR (VS Code Tab/Pill Style)
+   ======================================================== */
+.mode-bar {
+  position: fixed;
+  top: 16px;
+  left: 18px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(37, 37, 38, 0.7);
+  backdrop-filter: blur(10px);
+  padding: 3px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.mode-pill {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+}
+
+.mode-pill:hover {
+  background: var(--bg-tertiary);
+  color: #ffffff;
+}
+
+.mode-pill.active {
+  background: var(--vscode-blue);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================================
+   2. TOP-CENTER: ACTIVE MODE NAME DISPLAY
+   ======================================================== */
+.active-mode-display {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.active-mode-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--vscode-blue);
+  box-shadow: 0 0 8px var(--vscode-blue);
+}
+
+.active-mode-title {
+  font-family: var(--font-code);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: var(--text-main);
+  text-transform: uppercase;
+}
+
+/* ========================================================
+   3. TOP-RIGHT: MENU TOGGLE BUTTON & ISOLATED GUI WRAPPER
+   ======================================================== */
 .menu-toggle-btn {
   position: fixed;
   top: 16px;
@@ -83,7 +169,64 @@ body {
   border-color: var(--vscode-blue);
 }
 
-/* Bottom-Right GitHub Badge */
+.gui-wrapper {
+  position: fixed;
+  top: 58px;
+  right: 18px;
+  width: 320px;
+  z-index: 9999;
+}
+
+.gui-wrapper.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.gui-wrapper .tp-dfwv,
+.gui-wrapper .tp-rotv {
+  width: 100% !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--border-subtle) !important;
+  font-family: var(--font-ui) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* Tweakpane folder titles, labels, inputs */
+.tp-fldv_t {
+  font-family: var(--font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  color: #bbbbbb !important;
+}
+
+.tp-lblv_l {
+  font-family: var(--font-ui) !important;
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+.tp-txtv_i,
+.tp-lstv_s,
+.tp-btnv_b {
+  font-family: var(--font-ui) !important;
+  font-size: 12px !important;
+}
+
+.tp-sldv_t {
+  font-family: var(--font-code) !important;
+  font-size: 11px !important;
+}
+
+/* ========================================================
+   4. BOTTOM-RIGHT: BORDERLESS GHOST GITHUB BADGE
+   ======================================================== */
 .ghost-github-badge {
   position: fixed;
   bottom: 14px;
@@ -138,63 +281,6 @@ body {
 .ghost-github-badge:hover .github-icon {
   color: var(--vscode-blue-hover);
   transform: scale(1.08);
-}
-
-/* Dedicated GUI Wrapper: When hidden, absolutely 0px footprint, no borders, no ghosts */
-.gui-wrapper {
-  position: fixed;
-  top: 58px;
-  right: 18px;
-  width: 320px;
-  z-index: 9999;
-}
-
-.gui-wrapper.hidden {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* Custom styling inside the GUI wrapper */
-.gui-wrapper .tp-dfwv,
-.gui-wrapper .tp-rotv {
-  width: 100% !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-  border-radius: 4px !important;
-  overflow: hidden !important;
-  border: 1px solid var(--border-subtle) !important;
-  font-family: var(--font-ui) !important;
-  font-size: 12px !important;
-  letter-spacing: 0.2px !important;
-}
-
-/* Tweakpane folder titles, labels, inputs */
-.tp-fldv_t {
-  font-family: var(--font-ui) !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.8px !important;
-  color: #bbbbbb !important;
-}
-
-.tp-lblv_l {
-  font-family: var(--font-ui) !important;
-  font-size: 12px !important;
-  color: var(--text-muted) !important;
-}
-
-.tp-txtv_i,
-.tp-lstv_s,
-.tp-btnv_b {
-  font-family: var(--font-ui) !important;
-  font-size: 12px !important;
-}
-
-.tp-sldv_t {
-  font-family: var(--font-code) !important;
-  font-size: 11px !important;
 }
 
 /* Tweakpane CSS Variable Overrides to match Matte VS Code style */

@@ -2,9 +2,11 @@ import { Pane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 
 /**
- * UIManager handles the floating Tweakpane panel with extended camera testing controls:
- * - Can be collapsed into an icon or reopened via the top-right toggle button or 'H' hotkey.
- * - Dedicated #gui-container wrapper ensures 0 residual border/line when hidden.
+ * UIManager handles:
+ * - Top-Left: Mode switcher pills
+ * - Top-Center: Active mode name indicator
+ * - Top-Right: Isolated parameter controls (Tweakpane)
+ * - Bottom-Right: GitHub repo badge
  */
 export class UIManager {
   constructor({ onPlayPauseToggle, onSpeedChange, onModeChange, globalConfig }) {
@@ -18,13 +20,15 @@ export class UIManager {
     this.currentModeId = '';
     this.isMenuVisible = true;
 
+    this.modeBar = document.getElementById('modeBar');
+    this.activeModeTitle = document.getElementById('activeModeTitle');
     this.guiContainer = document.getElementById('gui-container');
     this.toggleMenuBtn = document.getElementById('toggleMenuBtn');
 
     // Initialize Tweakpane inside the isolated #gui-container
     this.pane = new Pane({
       container: this.guiContainer,
-      title: '🎥 Gimbal Test Suite',
+      title: 'Controls & Tuning',
       expanded: true,
     });
 
@@ -38,28 +42,12 @@ export class UIManager {
 
   setupGlobalFolders() {
     // -------------------------------------------------------------
-    // FOLDER 1: Test Mode Selection & Playback
+    // FOLDER 1: Playback & Engine (Speed, Play/Pause, FPS)
     // -------------------------------------------------------------
     const playbackFolder = this.pane.addFolder({
-      title: 'Control & Playback',
+      title: 'Engine & Playback',
       expanded: true,
     });
-
-    // Test Mode Dropdown binding
-    this.modeParams = { mode: '' };
-    this.modeBinding = playbackFolder
-      .addBinding(this.modeParams, 'mode', {
-        label: 'Test Mode',
-        options: {},
-      })
-      .on('change', (ev) => {
-        if (ev.value && ev.value !== this.currentModeId) {
-          this.currentModeId = ev.value;
-          if (this.onModeChange) {
-            this.onModeChange(ev.value);
-          }
-        }
-      });
 
     // Speed Slider
     playbackFolder
@@ -184,64 +172,75 @@ export class UIManager {
     }
   }
 
-  toggleMenuVisibility() {
-    this.isMenuVisible = !this.isMenuVisible;
-
-    if (this.guiContainer) {
-      if (this.isMenuVisible) {
-        this.guiContainer.classList.remove('hidden');
-      } else {
-        this.guiContainer.classList.add('hidden');
-      }
-    }
-
-    if (this.toggleMenuBtn) {
-      if (this.isMenuVisible) {
-        this.toggleMenuBtn.classList.add('active');
-        this.toggleMenuBtn.setAttribute('title', 'Hide Controls Panel (Hotkey: H)');
-      } else {
-        this.toggleMenuBtn.classList.remove('active');
-        this.toggleMenuBtn.setAttribute('title', 'Open Controls Panel (Hotkey: H)');
-      }
-    }
-  }
-
-  togglePlayPause() {
-    this.isPaused = !this.isPaused;
-    this.playPauseBtn.title = this.isPaused ? '▶ Play (Space)' : '⏸ Pause (Space)';
-    if (this.onPlayPauseToggle) {
-      this.onPlayPauseToggle(this.isPaused);
-    }
-  }
-
+  /**
+   * Render Top-Left Mode Switcher Buttons (Pills)
+   */
   populateModeList(modes, selectedId) {
     this.currentModeId = selectedId;
-    this.modeParams.mode = selectedId;
+    if (!this.modeBar) return;
 
-    const options = {};
-    modes.forEach((m) => {
-      options[m.name] = m.id;
-    });
+    this.modeBar.innerHTML = '';
+    modes.forEach((mode) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `mode-pill ${mode.id === selectedId ? 'active' : ''}`;
+      btn.textContent = mode.name.split('(')[0].trim(); // Clean short name
+      btn.title = mode.description;
 
-    this.modeBinding.dispose();
-    const playbackFolder = this.pane.children[0];
-    this.modeBinding = playbackFolder
-      .addBinding(this.modeParams, 'mode', {
-        label: 'Test Mode',
-        options,
-        index: 0,
-      })
-      .on('change', (ev) => {
-        if (ev.value && ev.value !== this.currentModeId) {
-          this.currentModeId = ev.value;
+      btn.addEventListener('click', () => {
+        if (this.currentModeId !== mode.id) {
+          this.currentModeId = mode.id;
+          this.updateActivePill(mode.id);
           if (this.onModeChange) {
-            this.onModeChange(ev.value);
+            this.onModeChange(mode.id);
           }
         }
       });
+
+      this.modeBar.appendChild(btn);
+    });
+
+    const activeObj = modes.find((m) => m.id === selectedId);
+    if (activeObj && this.activeModeTitle) {
+      this.activeModeTitle.textContent = activeObj.name;
+    }
+  }
+
+  updateActivePill(modeId) {
+    if (!this.modeBar) return;
+    const buttons = this.modeBar.querySelectorAll('.mode-pill');
+    buttons.forEach((btn) => {
+      btn.classList.toggle('active', btn.textContent === this.getModeShortName(modeId));
+    });
+  }
+
+  getModeShortName(modeId) {
+    const map = {
+      'linear-occlusion': 'Linear Occlusion',
+      'distractor-swapping': 'Crossing Paths',
+      'depth-zoom': 'Depth & Auto-Zoom',
+      'circular-tracking': 'Circular Orbit',
+      'step-jump': 'Step Response & Saccade Jump',
+    };
+    return map[modeId] || modeId;
   }
 
   renderModeControls(modeInstance) {
+    // Update Top-Center Active Mode Name Badge
+    if (this.activeModeTitle) {
+      this.activeModeTitle.textContent = modeInstance.name;
+    }
+
+    // Update active pill button state
+    if (this.modeBar) {
+      const buttons = this.modeBar.querySelectorAll('.mode-pill');
+      buttons.forEach((btn) => {
+        const isThis = modeInstance.name.startsWith(btn.textContent);
+        btn.classList.toggle('active', isThis);
+      });
+    }
+
+    // Rebuild mode controls in right panel
     if (this.modeFolder) {
       this.modeFolder.dispose();
       this.modeFolder = null;
@@ -251,9 +250,9 @@ export class UIManager {
     if (!controls || controls.length === 0) return;
 
     this.modeFolder = this.pane.addFolder({
-      title: `⚙️ ${modeInstance.name} Params`,
+      title: `⚙️ Mode Parameters`,
       expanded: true,
-      index: 1,
+      index: 0, // Mode parameters at the very top of right menu!
     });
 
     controls.forEach((ctrl) => {
@@ -290,6 +289,36 @@ export class UIManager {
           });
       }
     });
+  }
+
+  toggleMenuVisibility() {
+    this.isMenuVisible = !this.isMenuVisible;
+
+    if (this.guiContainer) {
+      if (this.isMenuVisible) {
+        this.guiContainer.classList.remove('hidden');
+      } else {
+        this.guiContainer.classList.add('hidden');
+      }
+    }
+
+    if (this.toggleMenuBtn) {
+      if (this.isMenuVisible) {
+        this.toggleMenuBtn.classList.add('active');
+        this.toggleMenuBtn.setAttribute('title', 'Hide Controls Panel (Hotkey: H)');
+      } else {
+        this.toggleMenuBtn.classList.remove('active');
+        this.toggleMenuBtn.setAttribute('title', 'Open Controls Panel (Hotkey: H)');
+      }
+    }
+  }
+
+  togglePlayPause() {
+    this.isPaused = !this.isPaused;
+    this.playPauseBtn.title = this.isPaused ? '▶ Play (Space)' : '⏸ Pause (Space)';
+    if (this.onPlayPauseToggle) {
+      this.onPlayPauseToggle(this.isPaused);
+    }
   }
 
   bindEvents() {
