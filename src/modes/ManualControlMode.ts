@@ -642,3 +642,4 @@ export class ManualControlMode extends BaseMode {
     this.clearTrail();
   }
 }
+
