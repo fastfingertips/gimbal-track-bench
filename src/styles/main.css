@@ -74,57 +74,65 @@ body {
   border-color: var(--vscode-blue);
 }
 
-/* Bottom-Right Minimal Ghost GitHub Badge (Fades in on hover) */
+/* Bottom-Right GitHub Badge:
+   - Icon is fixed at the far right
+   - Text expands to the LEFT of the icon
+   - No border
+   - Dim & subtle until hover
+*/
 .ghost-github-badge {
   position: fixed;
   bottom: 16px;
   right: 18px;
   z-index: 50;
   display: inline-flex;
+  flex-direction: row; /* Text is on the left, icon on the right */
   align-items: center;
-  gap: 0px;
-  background: rgba(30, 30, 30, 0.4);
-  backdrop-filter: blur(6px);
+  background: transparent;
   color: var(--text-muted);
   opacity: 0.35;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid var(--border-subtle);
+  padding: 6px 4px;
+  border: none !important; /* No border */
+  outline: none;
   text-decoration: none;
-  overflow: hidden;
-  max-width: 36px;
-  height: 36px;
-  white-space: nowrap;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  transition: opacity 0.25s ease, color 0.25s ease;
 }
 
 .ghost-github-badge .github-icon {
   flex-shrink: 0;
-  transition: color 0.2s ease;
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+  transition: transform 0.25s ease, color 0.25s ease;
 }
 
 .ghost-github-badge .repo-text {
   font-family: Consolas, "Courier New", monospace;
   font-size: 0.78rem;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
   opacity: 0;
-  margin-left: 8px;
-  transition: opacity 0.2s ease;
+  margin-right: 0px;
+  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease;
 }
 
-/* Hover expansion */
+/* On hover: text slides out to the LEFT of the fixed icon */
 .ghost-github-badge:hover {
   opacity: 1;
-  max-width: 250px;
-  padding: 8px 12px 8px 10px;
-  background: var(--bg-secondary);
   color: var(--vscode-blue-hover);
-  border-color: var(--vscode-blue);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-  transform: translateY(-2px);
 }
 
 .ghost-github-badge:hover .repo-text {
+  max-width: 220px;
   opacity: 1;
+  margin-right: 8px; /* space between text and icon */
+}
+
+.ghost-github-badge:hover .github-icon {
+  color: var(--vscode-blue-hover);
+  transform: scale(1.08);
 }
 
 /* Tweakpane Floating GUI Customizations - VS Code Matte Palette */
@@ -138,6 +146,18 @@ body {
   border-radius: 6px !important;
   overflow: hidden !important;
   border: 1px solid var(--border-subtle) !important;
+}
+
+/* Completely remove border/box-shadow/outline when hidden to prevent residual line */
+.tp-dfwv[style*="display: none"],
+.tp-dfwv.tp-v-hidden {
+  display: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Tweakpane CSS Variable Overrides to match Matte VS Code style */
