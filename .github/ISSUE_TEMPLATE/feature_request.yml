@@ -1,0 +1,21 @@
+name: Feature Request
+description: Suggest an idea or new tracking test mode for this suite.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Share your feature request or new test mode idea.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Test Gap
+      description: What camera tracking scenario or PTZ benchmark does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / Mode Design
+      description: Describe how the new test mode or control feature should operate.
+    validations:
+      required: true

@@ -76,3 +76,4 @@ describe('BaseMode Settings Serialization', () => {
     expect(mode.pattern).toBe('spiral');
   });
 });
+
