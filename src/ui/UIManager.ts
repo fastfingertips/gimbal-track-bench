@@ -26,7 +26,7 @@ export class UIManager {
   // Inactivity / Idle Auto-Hide
   private idleTimeoutId: number | null = null;
   private isUserIdle: boolean = false;
-  private readonly IDLE_DELAY_MS: number = 3000; // 3 seconds of inactivity
+  private readonly IDLE_DELAY_MS: number = 3000;
 
   private modeMenuWrapper: HTMLElement | null;
   private modeDropdownBtn: HTMLElement | null;
@@ -41,6 +41,9 @@ export class UIManager {
   private inspectorTitle: HTMLElement | null;
   private inspectorBody: HTMLElement | null;
   private closeInspectorBtn: HTMLElement | null;
+
+  // Cursor Tooltip Element
+  private cursorTooltip: HTMLElement | null;
 
   public pane: any;
   private modeFolder: any = null;
@@ -67,6 +70,8 @@ export class UIManager {
     this.inspectorBody = document.getElementById('inspectorBody');
     this.closeInspectorBtn = document.getElementById('closeInspectorBtn');
 
+    this.cursorTooltip = document.getElementById('cursorTooltip');
+
     this.pane = new Pane({
       container: this.guiContainer as HTMLElement,
       title: 'Controls & Tuning',
@@ -79,6 +84,7 @@ export class UIManager {
     this.bindEvents();
     this.bindCanvasInteraction();
     this.initInactivityTracker();
+    this.initCursorHoverTracker();
   }
 
   private setupGlobalFolders(): void {
@@ -198,6 +204,129 @@ export class UIManager {
   }
 
   // -------------------------------------------------------------
+  // CURSOR HOVER TOOLTIP (Shows entity name near mouse pointer)
+  // -------------------------------------------------------------
+  private initCursorHoverTracker(): void {
+    const canvasContainer = document.getElementById('canvas-container');
+    if (!canvasContainer || !this.cursorTooltip) return;
+
+    window.addEventListener('mousemove', (e: MouseEvent) => {
+      // Don't show tooltip if inspector or menu is open, or during idle auto-hide
+      if (
+        this.isUserIdle ||
+        (this.canvasInspector && !this.canvasInspector.classList.contains('hidden')) ||
+        this.isDropdownOpen
+      ) {
+        this.hideCursorTooltip();
+        return;
+      }
+
+      // Check if mouse is directly over any shape on the Konva stage
+      const stage = (this.activeModeRef as any)?.canvasManager?.stage;
+      if (!stage) {
+        this.hideCursorTooltip();
+        return;
+      }
+
+      const shape = stage.getIntersection({ x: e.clientX, y: e.clientY });
+
+      if (shape && shape.isVisible()) {
+        const entityInfo = this.identifyEntityFromShape(shape);
+        if (entityInfo) {
+          this.showCursorTooltip(e.clientX, e.clientY, entityInfo.name, entityInfo.tag, entityInfo.color);
+          return;
+        }
+      }
+
+      this.hideCursorTooltip();
+    });
+  }
+
+  private identifyEntityFromShape(shape: any): { name: string; tag: string; color: string } | null {
+    const parentName = shape.parent?.name() || '';
+    const shapeName = shape.name() || '';
+    const layerName = shape.getLayer()?.name() || '';
+
+    // Check Linear Occlusion
+    if (this.currentModeId === 'linear-occlusion') {
+      if (shape.className === 'Circle' || layerName === 'target-layer') {
+        return { name: 'Tracking Target', tag: 'Neon Circle', color: shape.fill() || '#007acc' };
+      }
+      if (shape.className === 'Rect' || layerName === 'obstacle-layer') {
+        return { name: 'Occlusion Obstacle', tag: 'Center Pillar', color: shape.fill() || '#141414' };
+      }
+    }
+
+    // Check Crossing Paths
+    if (this.currentModeId === 'distractor-swapping') {
+      const groupText = shape.parent?.findOne('Text')?.text();
+      if (groupText === 'A' || shape.getLayer()?.name() === 'primary-target-layer') {
+        return { name: 'Target A (Primary)', tag: 'Subject Lock', color: '#007acc' };
+      }
+      if (groupText === 'B' || shape.getLayer()?.name() === 'distractor-layer') {
+        return { name: 'Target B (Distractor)', tag: 'Imposter Pass', color: shape.fill() || '#e06c75' };
+      }
+    }
+
+    // Check Depth & Auto-Zoom
+    if (this.currentModeId === 'depth-zoom') {
+      if (shape.className === 'Circle') {
+        return { name: 'Perspective Target', tag: 'Auto-Zoom Scale', color: shape.fill() || '#007acc' };
+      }
+    }
+
+    // Check Circular Orbit
+    if (this.currentModeId === 'circular-tracking') {
+      if (shape.className === 'Circle') {
+        return { name: 'Orbiting Target', tag: 'Pan/Tilt Velocity', color: shape.fill() || '#007acc' };
+      }
+      if (shape.className === 'Ellipse') {
+        return { name: 'Orbit Path Guide', tag: 'Reference Ring', color: '#333338' };
+      }
+    }
+
+    // Check Step Jump
+    if (this.currentModeId === 'step-jump') {
+      if (shape.className === 'Circle' && shape.radius() > 20) {
+        return { name: 'Saccade Target', tag: 'Step Response', color: shape.fill() || '#007acc' };
+      }
+      if (shape.parent?.className === 'Group' || layerName === 'waypoints-layer') {
+        return { name: 'Target Waypoint', tag: 'Quadrant Hop', color: '#555560' };
+      }
+    }
+
+    // Generic fallback for any other interactable Konva shape
+    if (shape.className === 'Circle') {
+      return { name: 'Target Element', tag: 'Active', color: shape.fill() || '#007acc' };
+    }
+    if (shape.className === 'Rect') {
+      return { name: 'Obstacle Block', tag: 'Static', color: shape.fill() || '#141414' };
+    }
+
+    return null;
+  }
+
+  private showCursorTooltip(x: number, y: number, name: string, tag: string, color: string): void {
+    if (!this.cursorTooltip) return;
+
+    this.cursorTooltip.innerHTML = `
+      <span class="tooltip-color-tag" style="background-color: ${color}; box-shadow: 0 0 6px ${color};"></span>
+      <span class="tooltip-text">${name}</span>
+      <span class="tooltip-sub">${tag}</span>
+    `;
+
+    this.cursorTooltip.style.left = `${x}px`;
+    this.cursorTooltip.style.top = `${y}px`;
+    this.cursorTooltip.classList.remove('hidden');
+  }
+
+  private hideCursorTooltip(): void {
+    if (this.cursorTooltip && !this.cursorTooltip.classList.contains('hidden')) {
+      this.cursorTooltip.classList.add('hidden');
+    }
+  }
+
+  // -------------------------------------------------------------
   // INACTIVITY / IDLE AUTO-HIDE TRACKER
   // -------------------------------------------------------------
   private initInactivityTracker(): void {
@@ -211,27 +340,24 @@ export class UIManager {
         window.clearTimeout(this.idleTimeoutId);
       }
 
-      // Do not auto-hide if paused or if user is interacting with an open dropdown
       if (this.isPaused || this.isDropdownOpen) {
         return;
       }
 
       this.idleTimeoutId = window.setTimeout(() => {
-        // Double check not paused before fading out
         if (!this.isPaused && !this.isDropdownOpen) {
           this.isUserIdle = true;
           document.body.classList.add('user-idle');
+          this.hideCursorTooltip();
         }
       }, this.IDLE_DELAY_MS);
     };
 
-    // Track user movements & keyboard interactions
     window.addEventListener('mousemove', resetIdleTimer, { passive: true });
     window.addEventListener('mousedown', resetIdleTimer, { passive: true });
     window.addEventListener('keydown', resetIdleTimer, { passive: true });
     window.addEventListener('touchstart', resetIdleTimer, { passive: true });
 
-    // Start timer initially
     resetIdleTimer();
   }
 
@@ -385,9 +511,9 @@ export class UIManager {
       this.togglePlayPause();
     }
 
-    // When paused to inspect, make sure UI is fully visible
     this.isUserIdle = false;
     document.body.classList.remove('user-idle');
+    this.hideCursorTooltip();
 
     if (!this.canvasInspector || !this.inspectorBody || !this.activeModeRef) return;
 

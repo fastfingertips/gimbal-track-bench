@@ -47,14 +47,15 @@ body {
    GLOBAL INACTIVITY AUTO-HIDE (3s of no mouse/keyboard)
    ======================================================== */
 body.user-idle {
-  cursor: none !important; /* Hide mouse cursor completely during camera tracking test */
+  cursor: none !important;
 }
 
 body.user-idle .mode-menu-wrapper,
 body.user-idle .active-mode-display,
 body.user-idle .gui-wrapper,
 body.user-idle .menu-toggle-btn,
-body.user-idle .ghost-github-badge {
+body.user-idle .ghost-github-badge,
+body.user-idle .cursor-tooltip {
   opacity: 0 !important;
   pointer-events: none !important;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -70,7 +71,57 @@ body.user-idle .ghost-github-badge {
   background-color: var(--bg-primary);
   overflow: hidden;
   z-index: 1;
-  cursor: crosshair;
+  cursor: default;
+}
+
+/* ========================================================
+   DYNAMIC CURSOR HOVER TOOLTIP / BADGE
+   ======================================================== */
+.cursor-tooltip {
+  position: fixed;
+  z-index: 10001;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(30, 30, 34, 0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: var(--fw-medium);
+  color: #f0f0f4;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transform: translate(14px, 14px);
+  transition: opacity 0.15s ease, transform 0.08s ease-out;
+  white-space: nowrap;
+}
+
+.cursor-tooltip.hidden {
+  display: none !important;
+  opacity: 0;
+}
+
+.tooltip-color-tag {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tooltip-text {
+  letter-spacing: 0.2px;
+}
+
+.tooltip-sub {
+  font-family: var(--font-code);
+  font-size: 9px;
+  color: var(--vscode-blue-hover);
+  background: rgba(0, 122, 204, 0.15);
+  padding: 1px 4px;
+  border-radius: 2px;
 }
 
 /* ========================================================
@@ -326,7 +377,6 @@ body.user-idle .ghost-github-badge {
   overflow-y: auto;
 }
 
-/* Entity Section Box */
 .inspector-entity-section {
   background: rgba(34, 34, 38, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -524,7 +574,6 @@ body.user-idle .ghost-github-badge {
   letter-spacing: normal !important;
 }
 
-/* Flat non-collapsible Tweakpane headers */
 .tp-fldv_t .tp-fldv_a {
   display: none !important;
 }
