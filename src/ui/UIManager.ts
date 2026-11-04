@@ -30,10 +30,17 @@ export class UIManager {
   private guiContainer: HTMLElement | null;
   private toggleMenuBtn: HTMLElement | null;
 
+  // Canvas Quick Inspector elements
+  private canvasInspector: HTMLElement | null;
+  private inspectorTitle: HTMLElement | null;
+  private inspectorBody: HTMLElement | null;
+  private closeInspectorBtn: HTMLElement | null;
+
   public pane: any;
   private modeFolder: any = null;
   private playPauseBtn: any;
   private fpsGraph: any;
+  private activeModeRef: BaseMode | null = null;
 
   constructor(options: UIManagerOptions) {
     this.onPlayPauseToggle = options.onPlayPauseToggle;
@@ -49,6 +56,11 @@ export class UIManager {
     this.guiContainer = document.getElementById('gui-container');
     this.toggleMenuBtn = document.getElementById('toggleMenuBtn');
 
+    this.canvasInspector = document.getElementById('canvasInspector');
+    this.inspectorTitle = document.getElementById('inspectorTitle');
+    this.inspectorBody = document.getElementById('inspectorBody');
+    this.closeInspectorBtn = document.getElementById('closeInspectorBtn');
+
     this.pane = new Pane({
       container: this.guiContainer as HTMLElement,
       title: 'Controls & Tuning',
@@ -59,6 +71,7 @@ export class UIManager {
 
     this.setupGlobalFolders();
     this.bindEvents();
+    this.bindCanvasInteraction();
   }
 
   private setupGlobalFolders(): void {
@@ -177,9 +190,6 @@ export class UIManager {
     }
   }
 
-  /**
-   * Render Top-Left Soft Dropdown list of modes
-   */
   public populateModeList(modes: Array<{ id: string; name: string; description: string }>, selectedId: string): void {
     this.currentModeId = selectedId;
     if (!this.modeDropdownList) return;
@@ -240,6 +250,7 @@ export class UIManager {
   }
 
   public renderModeControls(modeInstance: BaseMode): void {
+    this.activeModeRef = modeInstance;
     this.updateActiveLabels(modeInstance.name);
 
     if (this.modeFolder) {
@@ -268,6 +279,7 @@ export class UIManager {
           })
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
+            this.syncInspectorValues(ctrl.id, ev.value);
           });
       } else if (ctrl.type === 'select') {
         const state = { [ctrl.id]: ctrl.value };
@@ -278,6 +290,7 @@ export class UIManager {
           })
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
+            this.syncInspectorValues(ctrl.id, ev.value);
           });
       } else if (ctrl.type === 'checkbox') {
         const state = { [ctrl.id]: !!ctrl.value };
@@ -287,9 +300,170 @@ export class UIManager {
           })
           .on('change', (ev: { value: any }) => {
             ctrl.onChange(ev.value);
+            this.syncInspectorValues(ctrl.id, ev.value);
           });
       }
     });
+  }
+
+  // -------------------------------------------------------------
+  // CANVAS CLICK INSPECTOR & PAUSE LOGIC
+  // -------------------------------------------------------------
+  private bindCanvasInteraction(): void {
+    const canvasContainer = document.getElementById('canvas-container');
+    if (!canvasContainer) return;
+
+    canvasContainer.addEventListener('click', (e: MouseEvent) => {
+      // If user clicked directly on canvas (not on any HUD/menu)
+      if (this.isDropdownOpen) {
+        this.closeDropdown();
+        return;
+      }
+
+      // If inspector is currently visible, clicking canvas resumes playback and hides inspector
+      if (this.canvasInspector && !this.canvasInspector.classList.contains('hidden')) {
+        this.hideInspectorAndResume();
+        return;
+      }
+
+      // Pause playback and open quick property inspector at click location
+      this.pauseAndShowInspector(e.clientX, e.clientY);
+    });
+
+    if (this.closeInspectorBtn) {
+      this.closeInspectorBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.hideInspectorAndResume();
+      });
+    }
+  }
+
+  public pauseAndShowInspector(clickX: number, clickY: number): void {
+    if (!this.isPaused) {
+      this.togglePlayPause();
+    }
+
+    if (!this.canvasInspector || !this.inspectorBody || !this.activeModeRef) return;
+
+    if (this.inspectorTitle) {
+      this.inspectorTitle.textContent = `${this.activeModeRef.name.split('(')[0].trim()} Properties`;
+    }
+
+    this.inspectorBody.innerHTML = '';
+    const controls = this.activeModeRef.getControls();
+
+    controls.forEach((ctrl) => {
+      const row = document.createElement('div');
+      row.className = 'inspector-item';
+
+      if (ctrl.type === 'range') {
+        const labelRow = document.createElement('div');
+        labelRow.className = 'inspector-label-row';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = ctrl.label;
+
+        const valSpan = document.createElement('span');
+        valSpan.className = 'inspector-val';
+        valSpan.id = `insp-val-${ctrl.id}`;
+        valSpan.textContent = String(ctrl.value);
+
+        labelRow.appendChild(nameSpan);
+        labelRow.appendChild(valSpan);
+
+        const input = document.createElement('input');
+        input.type = 'range';
+        input.className = 'inspector-input-range';
+        input.id = `insp-input-${ctrl.id}`;
+        input.min = String(ctrl.min ?? 0);
+        input.max = String(ctrl.max ?? 100);
+        input.step = String(ctrl.step ?? 1);
+        input.value = String(ctrl.value);
+
+        input.addEventListener('input', (ev) => {
+          const v = parseFloat((ev.target as HTMLInputElement).value);
+          valSpan.textContent = String(v);
+          ctrl.onChange(v);
+          this.pane.refresh();
+        });
+
+        row.appendChild(labelRow);
+        row.appendChild(input);
+      } else if (ctrl.type === 'select') {
+        const labelRow = document.createElement('div');
+        labelRow.className = 'inspector-label-row';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = ctrl.label;
+        labelRow.appendChild(nameSpan);
+
+        const select = document.createElement('select');
+        select.className = 'inspector-select';
+        select.id = `insp-input-${ctrl.id}`;
+
+        if (ctrl.options) {
+          Object.entries(ctrl.options).forEach(([optLabel, optVal]) => {
+            const opt = document.createElement('option');
+            opt.value = String(optVal);
+            opt.textContent = optLabel;
+            if (String(optVal) === String(ctrl.value)) {
+              opt.selected = true;
+            }
+            select.appendChild(opt);
+          });
+        }
+
+        select.addEventListener('change', (ev) => {
+          const v = (ev.target as HTMLSelectElement).value;
+          ctrl.onChange(v);
+          this.pane.refresh();
+        });
+
+        row.appendChild(labelRow);
+        row.appendChild(select);
+      }
+
+      this.inspectorBody.appendChild(row);
+    });
+
+    // Position inspector intelligently near click position but within screen bounds
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const panelW = 290;
+    const panelH = 260;
+
+    let posX = clickX + 15;
+    let posY = clickY + 15;
+
+    if (posX + panelW > screenW - 20) {
+      posX = clickX - panelW - 15;
+    }
+    if (posY + panelH > screenH - 20) {
+      posY = screenH - panelH - 20;
+    }
+    if (posY < 20) posY = 20;
+    if (posX < 20) posX = 20;
+
+    this.canvasInspector.style.left = `${posX}px`;
+    this.canvasInspector.style.top = `${posY}px`;
+    this.canvasInspector.classList.remove('hidden');
+  }
+
+  public hideInspectorAndResume(): void {
+    if (this.canvasInspector) {
+      this.canvasInspector.classList.add('hidden');
+    }
+    if (this.isPaused) {
+      this.togglePlayPause();
+    }
+  }
+
+  private syncInspectorValues(ctrlId: string, val: any): void {
+    const valSpan = document.getElementById(`insp-val-${ctrlId}`);
+    if (valSpan) valSpan.textContent = String(val);
+
+    const input = document.getElementById(`insp-input-${ctrlId}`) as HTMLInputElement | HTMLSelectElement;
+    if (input) input.value = String(val);
   }
 
   public toggleDropdown(): void {
@@ -343,7 +517,6 @@ export class UIManager {
   }
 
   private bindEvents(): void {
-    // Mode dropdown toggle button
     if (this.modeDropdownBtn) {
       this.modeDropdownBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -351,14 +524,12 @@ export class UIManager {
       });
     }
 
-    // Close dropdown on outside click
     window.addEventListener('click', (e) => {
       if (this.isDropdownOpen && !this.modeMenuWrapper?.contains(e.target as Node)) {
         this.closeDropdown();
       }
     });
 
-    // Right menu toggle button
     if (this.toggleMenuBtn) {
       this.toggleMenuBtn.classList.add('active');
       this.toggleMenuBtn.addEventListener('click', (e) => {
@@ -374,10 +545,17 @@ export class UIManager {
       }
       if (e.code === 'Space') {
         e.preventDefault();
-        this.togglePlayPause();
+        if (this.canvasInspector && !this.canvasInspector.classList.contains('hidden')) {
+          this.hideInspectorAndResume();
+        } else {
+          this.togglePlayPause();
+        }
       }
-      if (e.key === 'Escape' && this.isDropdownOpen) {
-        this.closeDropdown();
+      if (e.key === 'Escape') {
+        if (this.isDropdownOpen) this.closeDropdown();
+        if (this.canvasInspector && !this.canvasInspector.classList.contains('hidden')) {
+          this.hideInspectorAndResume();
+        }
       }
     });
 

@@ -47,6 +47,7 @@ body {
   background-color: var(--bg-primary);
   overflow: hidden;
   z-index: 1;
+  cursor: crosshair;
 }
 
 /* ========================================================
@@ -197,7 +198,6 @@ body {
   text-transform: uppercase;
 }
 
-/* Sleek subtle line under title */
 .active-mode-line {
   margin-top: 5px;
   width: 38px;
@@ -208,7 +208,166 @@ body {
 }
 
 /* ========================================================
-   3. TOP-RIGHT: 100% FRAMELESS TOGGLE ICON (NO BOX / NO BORDER)
+   3. ON-CANVAS CLICK INSPECTOR / QUICK TUNING HUD
+   ======================================================== */
+.canvas-inspector {
+  position: fixed;
+  z-index: 1000;
+  width: 290px;
+  background: rgba(30, 30, 32, 0.94);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: inspectorFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes inspectorFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.canvas-inspector.hidden {
+  display: none !important;
+}
+
+.inspector-header {
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inspector-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inspector-badge {
+  font-family: var(--font-code);
+  font-size: 9px;
+  font-weight: 700;
+  background: #ff5555;
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.inspector-title {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-main);
+}
+
+.inspector-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.inspector-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.inspector-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.inspector-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inspector-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.inspector-val {
+  font-family: var(--font-code);
+  color: var(--vscode-blue-hover);
+  font-size: 11px;
+}
+
+.inspector-input-range {
+  width: 100%;
+  height: 4px;
+  background: #3e3e42;
+  border-radius: 2px;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.inspector-input-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--vscode-blue);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--vscode-blue);
+  transition: transform 0.15s ease;
+}
+
+.inspector-input-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.inspector-select {
+  background: #252526;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-main);
+  font-size: 11px;
+  padding: 4px 6px;
+  outline: none;
+  cursor: pointer;
+}
+
+.inspector-footer {
+  padding: 6px 12px;
+  background: rgba(20, 20, 20, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 10px;
+  color: #6a6a72;
+  text-align: center;
+  font-family: var(--font-code);
+}
+
+/* ========================================================
+   4. TOP-RIGHT: 100% FRAMELESS TOGGLE ICON (NO BOX / NO BORDER)
    ======================================================== */
 .menu-toggle-btn {
   position: fixed;
@@ -229,15 +388,15 @@ body {
   justify-content: center;
   z-index: 10000;
   opacity: 0.65;
-  border-radius: 50% !important; /* Circular if any boundary, absolutely no square box */
+  border-radius: 50% !important;
   transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .menu-toggle-btn:hover {
   opacity: 1;
   color: var(--vscode-blue-hover);
-  background: transparent !important; /* Zero background box on hover */
-  transform: scale(1.15) rotate(15deg); /* Subtle playful gear spin instead of ugly square box */
+  background: transparent !important;
+  transform: scale(1.15) rotate(15deg);
 }
 
 .menu-toggle-btn.active {
@@ -301,7 +460,7 @@ body {
 }
 
 /* ========================================================
-   4. BOTTOM-RIGHT: BORDERLESS GHOST GITHUB BADGE
+   5. BOTTOM-RIGHT: BORDERLESS GHOST GITHUB BADGE
    ======================================================== */
 .ghost-github-badge {
   position: fixed;

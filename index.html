@@ -30,6 +30,19 @@
       <div class="active-mode-line"></div>
     </div>
 
+    <!-- On-Canvas Click Inspector / Quick Property Tuning HUD -->
+    <div id="canvasInspector" class="canvas-inspector hidden">
+      <div class="inspector-header">
+        <div class="inspector-title-wrap">
+          <span class="inspector-badge">PAUSED</span>
+          <span id="inspectorTitle" class="inspector-title">Target Properties</span>
+        </div>
+        <button id="closeInspectorBtn" class="inspector-close-btn" type="button" title="Resume Playback (Space/Esc)">✕</button>
+      </div>
+      <div id="inspectorBody" class="inspector-body"></div>
+      <div class="inspector-footer">Click canvas again or press Space to resume</div>
+    </div>
+
     <!-- Top-Right: Isolated GUI Wrapper for Parameter Controls -->
     <div id="gui-container" class="gui-wrapper"></div>
 
