@@ -28,7 +28,7 @@ body {
   height: 100vh;
   overflow: hidden;
   font-family: var(--font-ui);
-  font-size: 13px; /* VS Code default UI font size */
+  font-size: 13px;
   line-height: 1.4;
   letter-spacing: 0.15px;
   -webkit-font-smoothing: antialiased;
@@ -83,13 +83,7 @@ body {
   border-color: var(--vscode-blue);
 }
 
-/* Bottom-Right GitHub Badge:
-   - Cascadia Code / Consolas VS Code typography
-   - Icon is fixed at the far right
-   - Text expands to the LEFT of the icon
-   - No border
-   - Dim & subtle until hover
-*/
+/* Bottom-Right GitHub Badge */
 .ghost-github-badge {
   position: fixed;
   bottom: 14px;
@@ -146,13 +140,26 @@ body {
   transform: scale(1.08);
 }
 
-/* Tweakpane Floating GUI Customizations - VS Code Typography & Spacing */
-.tp-dfwv {
-  position: fixed !important;
-  top: 58px !important;
-  right: 18px !important;
-  width: 320px !important;
-  z-index: 9999 !important;
+/* Dedicated GUI Wrapper: When hidden, absolutely 0px footprint, no borders, no ghosts */
+.gui-wrapper {
+  position: fixed;
+  top: 58px;
+  right: 18px;
+  width: 320px;
+  z-index: 9999;
+}
+
+.gui-wrapper.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Custom styling inside the GUI wrapper */
+.gui-wrapper .tp-dfwv,
+.gui-wrapper .tp-rotv {
+  width: 100% !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
   border-radius: 4px !important;
   overflow: hidden !important;
@@ -185,22 +192,9 @@ body {
   font-size: 12px !important;
 }
 
-/* Monospace numeric values in slider badges */
 .tp-sldv_t {
   font-family: var(--font-code) !important;
   font-size: 11px !important;
-}
-
-/* Completely remove border/box-shadow/outline when hidden to prevent residual line */
-.tp-dfwv[style*="display: none"],
-.tp-dfwv.tp-v-hidden {
-  display: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  outline: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  overflow: hidden !important;
 }
 
 /* Tweakpane CSS Variable Overrides to match Matte VS Code style */

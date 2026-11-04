@@ -4,7 +4,7 @@ import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 /**
  * UIManager handles the floating Tweakpane panel with extended camera testing controls:
  * - Can be collapsed into an icon or reopened via the top-right toggle button or 'H' hotkey.
- * - Ghost GitHub badge at bottom right expanding on hover.
+ * - Dedicated #gui-container wrapper ensures 0 residual border/line when hidden.
  */
 export class UIManager {
   constructor({ onPlayPauseToggle, onSpeedChange, onModeChange, globalConfig }) {
@@ -18,10 +18,12 @@ export class UIManager {
     this.currentModeId = '';
     this.isMenuVisible = true;
 
+    this.guiContainer = document.getElementById('gui-container');
     this.toggleMenuBtn = document.getElementById('toggleMenuBtn');
 
-    // Initialize Tweakpane
+    // Initialize Tweakpane inside the isolated #gui-container
     this.pane = new Pane({
+      container: this.guiContainer,
       title: '🎥 Gimbal Test Suite',
       expanded: true,
     });
@@ -185,11 +187,12 @@ export class UIManager {
   toggleMenuVisibility() {
     this.isMenuVisible = !this.isMenuVisible;
 
-    // Tweakpane puts its root container element as this.pane.element
-    // We toggle the hidden attribute or direct display style
-    if (this.pane && this.pane.element) {
-      this.pane.hidden = !this.isMenuVisible;
-      this.pane.element.style.setProperty('display', this.isMenuVisible ? 'block' : 'none', 'important');
+    if (this.guiContainer) {
+      if (this.isMenuVisible) {
+        this.guiContainer.classList.remove('hidden');
+      } else {
+        this.guiContainer.classList.add('hidden');
+      }
     }
 
     if (this.toggleMenuBtn) {
@@ -250,7 +253,7 @@ export class UIManager {
     this.modeFolder = this.pane.addFolder({
       title: `⚙️ ${modeInstance.name} Params`,
       expanded: true,
-      index: 1, // Place right below Control & Playback
+      index: 1,
     });
 
     controls.forEach((ctrl) => {
@@ -290,7 +293,6 @@ export class UIManager {
   }
 
   bindEvents() {
-    // Toggle menu with top-right gear icon button
     if (this.toggleMenuBtn) {
       this.toggleMenuBtn.classList.add('active');
       this.toggleMenuBtn.addEventListener('click', (e) => {
@@ -301,18 +303,15 @@ export class UIManager {
     }
 
     window.addEventListener('keydown', (e) => {
-      // Toggle GUI with 'H'
       if (e.key === 'h' || e.key === 'H') {
         this.toggleMenuVisibility();
       }
-      // Toggle Play/Pause with 'Space'
       if (e.code === 'Space') {
         e.preventDefault();
         this.togglePlayPause();
       }
     });
 
-    // Start FPS graph ticker
     const tick = () => {
       if (this.fpsGraph && this.fpsGraph.begin) {
         this.fpsGraph.begin();
