@@ -1,13 +1,12 @@
 :root {
   /* Official VS Code Font Stacks */
-  /* Windows: Segoe UI, Mac: -apple-system / SF Pro, Linux: system-ui / Ubuntu */
   --font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-code: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
 
   /* Authentic VS Code Font Weights */
   --fw-normal: 400;
   --fw-medium: 500;
-  --fw-semibold: 600; /* In VS Code, headings/section titles are 600 or 500, never heavy 700/800 */
+  --fw-semibold: 600;
 
   /* VS Code Dark+ / Modern Matte Theme Palette */
   --bg-primary: #1e1e1e;          /* VS Code Editor BG */
@@ -37,7 +36,7 @@ body {
   font-size: 13px;
   line-height: 1.4;
   letter-spacing: normal;
-  -webkit-font-smoothing: subpixel-antialiased; /* Windows/VS Code native rendering */
+  -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: auto;
   background-color: var(--bg-primary);
   color: var(--text-main);
@@ -505,14 +504,20 @@ body {
   letter-spacing: normal !important;
 }
 
-/* Tweakpane authentic VS Code typography overrides */
+/* Remove chevron / collapse arrow from Tweakpane folders (Flat layout) */
+.tp-fldv_t .tp-fldv_a {
+  display: none !important; /* Hide collapse arrow */
+}
+
 .tp-fldv_t {
   font-family: var(--font-ui) !important;
   font-size: 11px !important;
-  font-weight: var(--fw-semibold) !important; /* 600 weight, not harsh 700 */
+  font-weight: var(--fw-semibold) !important;
   text-transform: uppercase !important;
   letter-spacing: 0.6px !important;
   color: var(--text-heading) !important;
+  cursor: default !important; /* Non-clickable header */
+  pointer-events: none !important;
 }
 
 .tp-lblv_l {

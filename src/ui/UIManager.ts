@@ -76,6 +76,7 @@ export class UIManager {
   }
 
   private setupGlobalFolders(): void {
+    // FOLDER 1: Playback & Speed (Always Open, Flat & Clean)
     const playbackFolder = this.pane.addFolder({
       title: 'Engine & Playback',
       expanded: true,
@@ -110,9 +111,10 @@ export class UIManager {
       lineCount: 2,
     });
 
+    // FOLDER 2: Camera & Visuals (Always Open by default, no collapse clutter)
     const visualFolder = this.pane.addFolder({
       title: 'Camera & Visuals',
-      expanded: false,
+      expanded: true, // Always expanded!
     });
 
     if (this.globalConfig) {
@@ -264,7 +266,7 @@ export class UIManager {
 
     this.modeFolder = this.pane.addFolder({
       title: `⚙️ Mode Parameters`,
-      expanded: true,
+      expanded: true, // Always expanded!
       index: 0,
     });
 
@@ -320,13 +322,11 @@ export class UIManager {
         return;
       }
 
-      // If full scene inspector is already open, clicking background resumes and closes it
       if (this.canvasInspector && !this.canvasInspector.classList.contains('hidden')) {
         this.hideInspectorAndResume();
         return;
       }
 
-      // Pause playback and list EVERY entity on the scene
       this.pauseAndShowSceneInspector(e.clientX, e.clientY);
     });
 
@@ -351,10 +351,8 @@ export class UIManager {
 
     this.inspectorBody.innerHTML = '';
 
-    // Collect ALL entities from the active test mode
     const modeEntities = this.activeModeRef.getSceneEntities();
 
-    // Environment & Grid entities from GlobalConfig
     const environmentEntity: InspectableEntity = {
       id: 'env-grid',
       name: 'Canvas Environment & Grid',
@@ -397,12 +395,10 @@ export class UIManager {
 
     const allEntities = [...modeEntities, environmentEntity];
 
-    // Render every entity in a categorized, accordion-like section
     allEntities.forEach((entity) => {
       const section = document.createElement('div');
       section.className = 'inspector-entity-section';
 
-      // Section Header (Entity Title + Color dot + Category)
       const secHeader = document.createElement('div');
       secHeader.className = 'entity-section-header';
 
@@ -428,7 +424,6 @@ export class UIManager {
       secHeader.appendChild(catBadge);
       section.appendChild(secHeader);
 
-      // Section Properties
       const propsContainer = document.createElement('div');
       propsContainer.className = 'entity-props-container';
 
@@ -503,7 +498,6 @@ export class UIManager {
       this.inspectorBody.appendChild(section);
     });
 
-    // Intelligent positioning near click
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
     const panelW = 320;
