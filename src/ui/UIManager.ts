@@ -272,6 +272,7 @@ export class UIManager {
   }
 
   private identifyEntityFromShape(shape: any): { name: string; tag: string; color: string } | null {
+    const parentName = shape.parent?.name() || '';
     const layerName = shape.getLayer()?.name() || '';
 
     if (this.currentModeId === 'linear-occlusion') {
@@ -314,23 +315,6 @@ export class UIManager {
       }
       if (shape.parent?.className === 'Group' || layerName === 'waypoints-layer') {
         return { name: 'Target Waypoint', tag: 'Quadrant Hop', color: '#555560' };
-      }
-    }
-
-    // Check Manual Pilot
-    if (this.currentModeId === 'manual-control') {
-      if (shape.className === 'Circle' || parentName === 'manual-target-group' || layerName === 'target-layer') {
-        return { name: 'Manual Pilot Target', tag: 'Mouse / Keys Controlled', color: shape.fill() || '#007acc' };
-      }
-    }
-
-    // Check Custom Trajectory
-    if (this.currentModeId === 'custom-path') {
-      if (shape.className === 'Circle' || parentName === 'custom-target-group') {
-        return { name: 'Trajectory Target', tag: 'Custom Path Tracking', color: shape.fill() || '#007acc' };
-      }
-      if (shape.className === 'Line') {
-        return { name: 'Drawn Trajectory', tag: 'User Path Guide', color: '#555560' };
       }
     }
 

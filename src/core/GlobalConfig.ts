@@ -96,12 +96,16 @@ export class GlobalConfig {
   }
 
   public applyBackgroundAndGrid(): void {
-    const container = document.getElementById('canvas-container');
-    if (container) {
-      container.style.backgroundColor = this.settings.backgroundColor;
+    if (typeof document !== 'undefined') {
+      const container = document.getElementById('canvas-container');
+      if (container) {
+        container.style.backgroundColor = this.settings.backgroundColor;
+      }
     }
 
+    if (!this.canvasManager || !this.canvasManager.getLayer) return;
     const gridLayer = this.canvasManager.getLayer('background-grid-layer');
+    if (!gridLayer) return;
     gridLayer.moveToBottom();
     gridLayer.destroyChildren();
 

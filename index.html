@@ -7,13 +7,10 @@
     <link rel="stylesheet" href="./src/styles/main.css" />
   </head>
   <body>
-    <!-- Full-screen canvas container for PTZ / Gimbal camera tracking -->
     <main id="canvas-container" class="canvas-container"></main>
 
-    <!-- Dynamic Cursor Tooltip / Hover Badge for Scene Entities -->
     <div id="cursorTooltip" class="cursor-tooltip hidden"></div>
 
-    <!-- Top-Left: Modern Soft Dropdown / Menu for Test Modes -->
     <div id="modeMenuWrapper" class="mode-menu-wrapper">
       <button id="modeDropdownBtn" class="mode-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false">
         <span class="trigger-label">Mode</span>
@@ -23,17 +20,14 @@
         </svg>
       </button>
 
-      <!-- Soft Floating Modes List -->
       <div id="modeDropdownList" class="mode-dropdown-list hidden" role="menu"></div>
     </div>
 
-    <!-- Top-Center: Minimal Clean Text with Sleek Underline Indicator -->
     <div class="active-mode-display">
       <span id="activeModeTitle" class="active-mode-title">Linear Occlusion</span>
       <div class="active-mode-line"></div>
     </div>
 
-    <!-- On-Canvas Click Inspector / Quick Property Tuning HUD -->
     <div id="canvasInspector" class="canvas-inspector hidden">
       <div class="inspector-header">
         <div class="inspector-title-wrap">
@@ -46,10 +40,8 @@
       <div class="inspector-footer">Click canvas again or press Space to resume</div>
     </div>
 
-    <!-- Top-Right: Isolated GUI Wrapper for Parameter Controls -->
     <div id="gui-container" class="gui-wrapper"></div>
 
-    <!-- Top-Right: 100% Frameless & Non-Boxy Floating Toggle Icon Button -->
     <button
       id="toggleMenuBtn"
       class="icon-btn menu-toggle-btn active"
@@ -63,7 +55,6 @@
       </svg>
     </button>
 
-    <!-- Bottom-Right Borderless GitHub Badge (Text on Left, Fixed Icon on Right) -->
     <a
       href="https://github.com/fastfingertips/gimbal-test"
       target="_blank"
@@ -77,7 +68,6 @@
       </svg>
     </a>
 
-    <!-- TypeScript Entry Point -->
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

@@ -1,0 +1,16 @@
+{
+  "threshold": 10,
+  "reporters": ["console"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.json",
+    "**/*.log",
+    "**/*.d.ts",
+    "**/tests/**"
+  ],
+  "format": ["typescript", "javascript", "css"],
+  "mode": "mild",
+  "minLines": 10,
+  "minTokens": 75
+}

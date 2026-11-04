@@ -1,12 +1,19 @@
 {
-  "name": "gimbal-test",
-  "private": true,
+  "name": "gimbal-track-bench",
   "version": "0.1.0",
+  "description": "High-performance visual benchmark suite for evaluating PTZ and gimbal camera tracking algorithms.",
+  "license": "MIT",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "jscpd": "jscpd src",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm run jscpd && npm run test && npm run build"
   },
   "dependencies": {
     "@tweakpane/plugin-essentials": "^0.2.1",
@@ -15,8 +22,15 @@
     "tweakpane": "^4.0.5"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.6",
-    "typescript": "^7.0.2",
-    "vite": "^5.4.10"
+    "eslint": "^10.14.0",
+    "jscpd": "^5.4.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.9"
   }
 }

@@ -380,8 +380,14 @@ export class DistractorSwappingMode extends BaseMode {
 
   public override setPaused(paused: boolean): void {
     super.setPaused(paused);
-    if (this.primaryTween) paused ? this.primaryTween.pause() : this.primaryTween.play();
-    if (this.distractorTween) paused ? this.distractorTween.pause() : this.distractorTween.play();
+    if (this.primaryTween) {
+      if (paused) this.primaryTween.pause();
+      else this.primaryTween.play();
+    }
+    if (this.distractorTween) {
+      if (paused) this.distractorTween.pause();
+      else this.distractorTween.play();
+    }
   }
 
   public override setTimeScale(scale: number): void {

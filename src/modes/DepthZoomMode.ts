@@ -252,8 +252,14 @@ export class DepthZoomMode extends BaseMode {
 
   public override setPaused(paused: boolean): void {
     super.setPaused(paused);
-    if (this.zoomTween) paused ? this.zoomTween.pause() : this.zoomTween.play();
-    if (this.posTween) paused ? this.posTween.pause() : this.posTween.play();
+    if (this.zoomTween) {
+      if (paused) this.zoomTween.pause();
+      else this.zoomTween.play();
+    }
+    if (this.posTween) {
+      if (paused) this.posTween.pause();
+      else this.posTween.play();
+    }
   }
 
   public override setTimeScale(scale: number): void {

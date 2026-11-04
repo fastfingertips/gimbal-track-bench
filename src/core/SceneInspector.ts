@@ -1,6 +1,3 @@
-import Konva from 'konva';
-import type { BaseMode } from './BaseMode';
-
 export interface InspectorPropertyField {
   id: string;
   label: string;

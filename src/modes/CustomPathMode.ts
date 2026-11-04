@@ -255,7 +255,7 @@ export class CustomPathMode extends BaseMode {
       {
         id: 'trajectory-path',
         name: `User Trajectory (${Math.round(this.totalLength)} px)`,
-        category: 'waypoint',
+        category: 'system',
         colorTag: '#3b82f6',
         properties: [
           {
