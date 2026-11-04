@@ -3,10 +3,12 @@ import { ModeRegistry } from './core/ModeRegistry.js';
 import { GlobalConfig } from './core/GlobalConfig.js';
 import { UIManager } from './ui/UIManager.js';
 
-// Import test modes
+// Import all test modes (Classic & Forum-Driven Benchmarks)
 import { LinearOcclusionMode } from './modes/LinearOcclusionMode.js';
 import { CircularTrackingMode } from './modes/CircularTrackingMode.js';
 import { StepJumpMode } from './modes/StepJumpMode.js';
+import { DistractorSwappingMode } from './modes/DistractorSwappingMode.js';
+import { DepthZoomMode } from './modes/DepthZoomMode.js';
 
 class App {
   constructor() {
@@ -38,6 +40,8 @@ class App {
 
     // 5. Register all test modes
     this.modeRegistry.register(new LinearOcclusionMode());
+    this.modeRegistry.register(new DistractorSwappingMode()); // #1 Forum Problem: Target Swapping
+    this.modeRegistry.register(new DepthZoomMode()); // #2 Forum Problem: Auto-Framing & Zoom
     this.modeRegistry.register(new CircularTrackingMode());
     this.modeRegistry.register(new StepJumpMode());
 
