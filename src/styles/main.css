@@ -43,6 +43,23 @@ body {
   user-select: none;
 }
 
+/* ========================================================
+   GLOBAL INACTIVITY AUTO-HIDE (3s of no mouse/keyboard)
+   ======================================================== */
+body.user-idle {
+  cursor: none !important; /* Hide mouse cursor completely during camera tracking test */
+}
+
+body.user-idle .mode-menu-wrapper,
+body.user-idle .active-mode-display,
+body.user-idle .gui-wrapper,
+body.user-idle .menu-toggle-btn,
+body.user-idle .ghost-github-badge {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
 /* Fullscreen Canvas */
 .canvas-container {
   position: absolute;
@@ -66,6 +83,7 @@ body {
   z-index: 50;
   display: flex;
   flex-direction: column;
+  transition: opacity 0.25s ease;
 }
 
 .mode-dropdown-trigger {
@@ -194,6 +212,7 @@ body {
   flex-direction: column;
   align-items: center;
   pointer-events: none;
+  transition: opacity 0.25s ease;
 }
 
 .active-mode-title {
@@ -462,7 +481,7 @@ body {
   z-index: 10000;
   opacity: 0.65;
   border-radius: 50% !important;
-  transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.25s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .menu-toggle-btn:hover {
@@ -483,6 +502,7 @@ body {
   right: 18px;
   width: 320px;
   z-index: 9999;
+  transition: opacity 0.25s ease;
 }
 
 .gui-wrapper.hidden {
@@ -504,9 +524,9 @@ body {
   letter-spacing: normal !important;
 }
 
-/* Remove chevron / collapse arrow from Tweakpane folders (Flat layout) */
+/* Flat non-collapsible Tweakpane headers */
 .tp-fldv_t .tp-fldv_a {
-  display: none !important; /* Hide collapse arrow */
+  display: none !important;
 }
 
 .tp-fldv_t {
@@ -516,7 +536,7 @@ body {
   text-transform: uppercase !important;
   letter-spacing: 0.6px !important;
   color: var(--text-heading) !important;
-  cursor: default !important; /* Non-clickable header */
+  cursor: default !important;
   pointer-events: none !important;
 }
 
@@ -564,7 +584,7 @@ body {
   outline: none;
   text-decoration: none;
   cursor: pointer;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  transition: opacity 0.25s ease, color 0.2s ease;
 }
 
 .ghost-github-badge .github-icon {

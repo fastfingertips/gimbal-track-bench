@@ -23,6 +23,11 @@ export class UIManager {
   public isMenuVisible: boolean = true;
   private isDropdownOpen: boolean = false;
 
+  // Inactivity / Idle Auto-Hide
+  private idleTimeoutId: number | null = null;
+  private isUserIdle: boolean = false;
+  private readonly IDLE_DELAY_MS: number = 3000; // 3 seconds of inactivity
+
   private modeMenuWrapper: HTMLElement | null;
   private modeDropdownBtn: HTMLElement | null;
   private triggerActiveName: HTMLElement | null;
@@ -73,10 +78,10 @@ export class UIManager {
     this.setupGlobalFolders();
     this.bindEvents();
     this.bindCanvasInteraction();
+    this.initInactivityTracker();
   }
 
   private setupGlobalFolders(): void {
-    // FOLDER 1: Playback & Speed (Always Open, Flat & Clean)
     const playbackFolder = this.pane.addFolder({
       title: 'Engine & Playback',
       expanded: true,
@@ -111,10 +116,9 @@ export class UIManager {
       lineCount: 2,
     });
 
-    // FOLDER 2: Camera & Visuals (Always Open by default, no collapse clutter)
     const visualFolder = this.pane.addFolder({
       title: 'Camera & Visuals',
-      expanded: true, // Always expanded!
+      expanded: true,
     });
 
     if (this.globalConfig) {
@@ -193,6 +197,44 @@ export class UIManager {
     }
   }
 
+  // -------------------------------------------------------------
+  // INACTIVITY / IDLE AUTO-HIDE TRACKER
+  // -------------------------------------------------------------
+  private initInactivityTracker(): void {
+    const resetIdleTimer = () => {
+      if (this.isUserIdle) {
+        this.isUserIdle = false;
+        document.body.classList.remove('user-idle');
+      }
+
+      if (this.idleTimeoutId !== null) {
+        window.clearTimeout(this.idleTimeoutId);
+      }
+
+      // Do not auto-hide if paused or if user is interacting with an open dropdown
+      if (this.isPaused || this.isDropdownOpen) {
+        return;
+      }
+
+      this.idleTimeoutId = window.setTimeout(() => {
+        // Double check not paused before fading out
+        if (!this.isPaused && !this.isDropdownOpen) {
+          this.isUserIdle = true;
+          document.body.classList.add('user-idle');
+        }
+      }, this.IDLE_DELAY_MS);
+    };
+
+    // Track user movements & keyboard interactions
+    window.addEventListener('mousemove', resetIdleTimer, { passive: true });
+    window.addEventListener('mousedown', resetIdleTimer, { passive: true });
+    window.addEventListener('keydown', resetIdleTimer, { passive: true });
+    window.addEventListener('touchstart', resetIdleTimer, { passive: true });
+
+    // Start timer initially
+    resetIdleTimer();
+  }
+
   public populateModeList(modes: Array<{ id: string; name: string; description: string }>, selectedId: string): void {
     this.currentModeId = selectedId;
     if (!this.modeDropdownList) return;
@@ -266,7 +308,7 @@ export class UIManager {
 
     this.modeFolder = this.pane.addFolder({
       title: `⚙️ Mode Parameters`,
-      expanded: true, // Always expanded!
+      expanded: true,
       index: 0,
     });
 
@@ -342,6 +384,10 @@ export class UIManager {
     if (!this.isPaused) {
       this.togglePlayPause();
     }
+
+    // When paused to inspect, make sure UI is fully visible
+    this.isUserIdle = false;
+    document.body.classList.remove('user-idle');
 
     if (!this.canvasInspector || !this.inspectorBody || !this.activeModeRef) return;
 
