@@ -34,43 +34,97 @@ body {
   z-index: 1;
 }
 
-/* Bottom-right GitHub Repository link badge */
-.repo-badge {
+/* Top-Right Toggle Icon Button */
+.menu-toggle-btn {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(22, 22, 26, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a0a0aa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.menu-toggle-btn:hover {
+  background: rgba(32, 32, 38, 0.95);
+  color: var(--accent-color);
+  border-color: rgba(0, 255, 102, 0.4);
+  transform: scale(1.06);
+}
+
+.menu-toggle-btn.active {
+  background: rgba(0, 255, 102, 0.15);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+/* Bottom-Right Minimal Ghost GitHub Badge (Fades in on hover) */
+.ghost-github-badge {
   position: fixed;
   bottom: 16px;
   right: 20px;
   z-index: 50;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(22, 22, 26, 0.75);
-  backdrop-filter: blur(10px);
-  color: #c0c0c6;
-  font-size: 0.78rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  gap: 0px;
+  background: rgba(22, 22, 26, 0.4);
+  backdrop-filter: blur(8px);
+  color: #71717a;
+  opacity: 0.35;
+  padding: 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
+  overflow: hidden;
+  max-width: 36px;
+  height: 36px;
+  white-space: nowrap;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.repo-badge:hover {
-  background: rgba(35, 35, 42, 0.95);
+.ghost-github-badge .github-icon {
+  flex-shrink: 0;
+  transition: color 0.25s ease;
+}
+
+.ghost-github-badge .repo-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  opacity: 0;
+  margin-left: 8px;
+  transition: opacity 0.25s ease;
+}
+
+/* Hover expansion */
+.ghost-github-badge:hover {
+  opacity: 1;
+  max-width: 250px;
+  padding: 8px 14px 8px 10px;
+  background: rgba(26, 26, 32, 0.9);
   color: var(--accent-color);
   border-color: rgba(0, 255, 102, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
-.github-icon {
-  opacity: 0.85;
+.ghost-github-badge:hover .repo-text {
+  opacity: 1;
 }
 
 /* Tweakpane Floating GUI Customizations */
 .tp-dfwv {
   position: fixed !important;
-  top: 18px !important;
+  top: 68px !important; /* Positioned right below the icon button */
   right: 20px !important;
   width: 320px !important;
   z-index: 9999 !important;
@@ -78,7 +132,12 @@ body {
   border-radius: 8px !important;
   overflow: hidden !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(14px) !important;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tp-dfwv.tp-hidden {
+  display: none !important;
 }
 
 :root {

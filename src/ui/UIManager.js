@@ -2,11 +2,9 @@ import { Pane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 
 /**
- * UIManager handles the rich floating Tweakpane panel with extended camera testing controls:
- * - Playback & Engine controls (Play/Pause, Speed, FPS monitor)
- * - Test Mode selection & dynamic mode parameter folders
- * - Visual & Camera Appearance (Target color, Glow, Obstacle opacity, Crosshair, Calibration grid)
- * - Keyboard shortcuts ('H' to hide/show, 'Space' to play/pause)
+ * UIManager handles the floating Tweakpane panel with extended camera testing controls:
+ * - Can be collapsed into an icon or reopened via the top-right toggle button or 'H' hotkey.
+ * - Ghost GitHub badge at bottom right expanding on hover.
  */
 export class UIManager {
   constructor({ onPlayPauseToggle, onSpeedChange, onModeChange, globalConfig }) {
@@ -18,8 +16,9 @@ export class UIManager {
     this.isPaused = false;
     this.currentSpeed = 1.0;
     this.currentModeId = '';
+    this.isMenuVisible = true;
 
-    this.hudModeName = document.getElementById('hudModeName');
+    this.toggleMenuBtn = document.getElementById('toggleMenuBtn');
 
     // Initialize Tweakpane
     this.pane = new Pane({
@@ -32,7 +31,7 @@ export class UIManager {
 
     this.modeFolder = null;
     this.setupGlobalFolders();
-    this.bindKeyboardShortcuts();
+    this.bindEvents();
   }
 
   setupGlobalFolders() {
@@ -183,6 +182,20 @@ export class UIManager {
     }
   }
 
+  toggleMenuVisibility() {
+    this.isMenuVisible = !this.isMenuVisible;
+    const el = this.pane.element;
+    if (el) {
+      if (this.isMenuVisible) {
+        el.classList.remove('tp-hidden');
+        if (this.toggleMenuBtn) this.toggleMenuBtn.classList.add('active');
+      } else {
+        el.classList.add('tp-hidden');
+        if (this.toggleMenuBtn) this.toggleMenuBtn.classList.remove('active');
+      }
+    }
+  }
+
   togglePlayPause() {
     this.isPaused = !this.isPaused;
     this.playPauseBtn.title = this.isPaused ? '▶ Play (Space)' : '⏸ Pause (Space)';
@@ -219,10 +232,6 @@ export class UIManager {
   }
 
   renderModeControls(modeInstance) {
-    if (this.hudModeName) {
-      this.hudModeName.textContent = modeInstance.name;
-    }
-
     if (this.modeFolder) {
       this.modeFolder.dispose();
       this.modeFolder = null;
@@ -273,14 +282,19 @@ export class UIManager {
     });
   }
 
-  bindKeyboardShortcuts() {
+  bindEvents() {
+    // Toggle menu with top-right gear icon button
+    if (this.toggleMenuBtn) {
+      this.toggleMenuBtn.classList.add('active');
+      this.toggleMenuBtn.addEventListener('click', () => {
+        this.toggleMenuVisibility();
+      });
+    }
+
     window.addEventListener('keydown', (e) => {
       // Toggle GUI with 'H'
       if (e.key === 'h' || e.key === 'H') {
-        const el = this.pane.element;
-        if (el) {
-          el.style.display = el.style.display === 'none' ? '' : 'none';
-        }
+        this.toggleMenuVisibility();
       }
       // Toggle Play/Pause with 'Space'
       if (e.code === 'Space') {
