@@ -14,3 +14,4 @@ Brief summary of the proposed changes.
 - [ ] All commit messages on this branch are **<= 62 characters**.
 - [ ] `npm run check` passes with 0 errors (typecheck, lint, jscpd, test, build).
 - [ ] Documentation and single-sentence README constraint preserved.
+
